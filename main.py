@@ -1,12 +1,21 @@
 import pygame as pg
-from custom_utils.object_tools import Sprite
 
-width = 1280
-height = 720
-
+from custom_utils.object_tools import Sprite, TiledMap
+from custom_utils.gametools import handle_keypresses
 
 pg.init()
+
+screen = pg.display.set_mode((1, 1))
+
 clock = pg.time.Clock()
+gmap = TiledMap('maps/map_test.tmx')
+map_img = gmap.make_map()
+map_rect = map_img.get_rect()
+
+width = map_img.get_width()
+height = map_img.get_height()
+
+
 
 screen = pg.display.set_mode((width, height))
 pg.display.set_caption('My game')
@@ -17,38 +26,16 @@ sprite1 = Sprite(200, 200, pg.image.load('1.jpg'), screen)
 running = True
 while running:
     screen.fill((0,0,0))
+    screen.blit(map_img, (0, 0))
     
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-        # if event.type == pg.KEYDOWN:
-        #     if event.key == pg.K_DOWN:
-        #         sprite1.move(0, 5)
-        #     if event.key == pg.K_UP:
-        #         sprite1.move(0, -5)
-        #     if event.key == pg.K_LEFT:
-        #         sprite1.move(-5, 0)
-        #     if event.key == pg.K_RIGHT:
-        #         sprite1.move(5, 0)
     
-    keys = pg.key.get_pressed()
-    if keys[pg.K_LEFT]:
-        sprite1.move(-1, 0)
-    if keys[pg.K_RIGHT]:
-        sprite1.move(1, 0)
-    if keys[pg.K_UP]:
-        sprite1.move(0, -1)
-    if keys[pg.K_DOWN]:
-        sprite1.move(0, 1)
-    if keys[pg.K_z]:
-        sprite1.rotate(1)
-    if keys[pg.K_x]:
-        sprite1.rotate(-1)
+    handle_keypresses(sprite1)
     
     sprite1.draw()
     
     pg.display.update()
-    clock.tick(200)
+    clock.tick(20000)
     
-    if keys[pg.K_ESCAPE]:
-        pg.quit()
