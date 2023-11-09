@@ -42,13 +42,31 @@ def handle_keypresses_through_force(sprite):
         sprite.apply_force_now_local(0, 0, 0.1)
     if keys[pg.K_x]:
         sprite.apply_force_now_local(0, 0, -0.1)
+
+
+def handle_key_events():
+    keys = pg.key.get_pressed()
     if keys[pg.K_ESCAPE]:
         pg.quit()
-        
 
-def draw_every_sprite_in_list(list_):
+
+
+def handle_offset_change(offset_x, offset_y):
+    keys = pg.key.get_pressed()
+    if keys[pg.K_w]:
+        offset_y -= 5
+    if keys[pg.K_s]:
+        offset_y += 5
+    if keys[pg.K_a]:
+        offset_x -= 5
+    if keys[pg.K_d]:
+        offset_x += 5
+    return offset_x, offset_y
+
+
+def draw_every_sprite_in_list(list_, offset_x, offset_y):
     for sprite in list_:
-        sprite.draw()
+        sprite.draw(offset_x, offset_y)
         
 
 def check_collisions_between_tilemap_and_spritelist(tilemap, spritelist):

@@ -29,8 +29,11 @@ class Sprite(pygame.sprite.Sprite):
         self.rect.y += y
         self.rotate(degrees)
     
-    def draw(self):
-        self.screen.blit(self.image, self.rect)
+    def draw(self, offset_x, offset_y):
+        rect_to_draw = copy(self.rect)
+        rect_to_draw.x += offset_x
+        rect_to_draw.y += offset_y
+        self.screen.blit(self.image, rect_to_draw)
         
         
         
@@ -88,8 +91,8 @@ class PhysicalObject(Sprite):
         self.rotate(self.ang_vel)
 
 
-    def draw(self):
-        super().draw()
+    def draw(self, offset_x, offset_y):
+        super().draw(offset_x, offset_y)
         self._move()
 
 
