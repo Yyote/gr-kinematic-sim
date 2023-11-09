@@ -1,5 +1,4 @@
 import pygame as pg
-from custom_utils.mathtools import make_non_zero, limit
 
 
 def handle_keypresses(sprite):
@@ -61,6 +60,9 @@ def handle_offset_change(offset_x, offset_y):
         offset_x -= 5
     if keys[pg.K_d]:
         offset_x += 5
+    if keys[pg.K_BACKSPACE]:
+        offset_x = 0
+        offset_y = 0
     return offset_x, offset_y
 
 
@@ -69,46 +71,16 @@ def draw_every_sprite_in_list(list_, offset_x, offset_y):
         sprite.draw(offset_x, offset_y)
         
 
-def check_collisions_between_tilemap_and_spritelist(tilemap, spritelist):
+def scroll_screen_with_mouse(screen_width, screen_height, offset_x, offset_y):
+    mx, my = pg.mouse.get_pos()
     
-    for i in range(len(tilemap.collider_list)):
-        for j in range(len(spritelist)):
-            if spritelist[j].rect.colliderect(tilemap.collider_list[i]):
-                spritelist[j].lin_accel_x = 0
-                spritelist[j].lin_accel_y = 0
-                
-                dx = spritelist[j].rect.x - tilemap.collider_list[i].x
-                dy = spritelist[j].rect.y - tilemap.collider_list[i].y
-                
-                
-                spritelist[j].apply_force_now(limit(8 / (make_non_zero(dx)), 3), limit(8 / (make_non_zero(dy)), 3))
-                
-                spritelist[j].ang_accel = 0
-                spritelist[j].ang_vel = - spritelist[j].ang_vel
-
-
-def check_collisions_in_spritelist(spritelist):
-    for i in range(len(spritelist)):
-        for j in range(len(spritelist)):
-            if j > i:
-                if spritelist[j].rect.colliderect(spritelist[i].rect):
-                    spritelist[j].lin_accel_x = 0
-                    spritelist[j].lin_accel_y = 0
-                    
-                    dx = spritelist[j].rect.x - spritelist[i].rect.x
-                    dy = spritelist[j].rect.y - spritelist[i].rect.y
-                    
-                    spritelist[i].lin_accel_x = 0
-                    spritelist[i].lin_accel_y = 0
-                    
-                    dx2 = spritelist[i].rect.x - spritelist[j].rect.x
-                    dy2 = spritelist[i].rect.y - spritelist[j].rect.y
-                    
-                    spritelist[j].ang_accel = 0
-                    spritelist[j].ang_vel = - spritelist[j].ang_vel
-                    
-                    spritelist[i].ang_accel = 0
-                    spritelist[i].ang_vel = - spritelist[i].ang_vel
-                    
-                    spritelist[j].apply_force_now(limit(8 / (make_non_zero(dx)), 3), limit(8 / (make_non_zero(dy)), 3))
-                    spritelist[i].apply_force_now(limit(8 / (make_non_zero(dx2)), 3), limit(8 / (make_non_zero(dy2)), 3))
+    if mx < screen_width / 10 and mx > 0:
+        offset_x += 5
+    if mx > screen_width * 9 / 10 and mx < screen_width:
+        offset_x -= 5
+    if my < screen_height / 10 and my > 0:
+        offset_y += 5
+    if my > screen_height * 9 / 10 and my < screen_height:
+        offset_y -= 5
+        
+    return offset_x, offset_y
