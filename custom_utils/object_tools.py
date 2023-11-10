@@ -163,4 +163,3 @@ class TiledMap():
         self.mapSurface = pygame.Surface((self.mapwidth, self.mapheight))
         self._render(self.mapSurface)
         return self.mapSurface
-

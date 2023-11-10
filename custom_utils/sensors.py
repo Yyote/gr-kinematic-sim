@@ -36,7 +36,7 @@ class Lidar(Sprite):
         return lines
 
     def logic(self, tilemap):
-        lines = self.get_lidar_lines_around_point(self.screen)
+        lines = self.get_lidar_lines_around_point(self.screen, True)
         collisions = check_collisions_between_tilemap_and_lines(self.screen, tilemap, lines)
         for i in range(len(collisions)):
             if collisions[i] is not None:
