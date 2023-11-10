@@ -1,10 +1,12 @@
 import pygame as pg
 import pygame.draw as d
 import math as m
-from custom_utils.object_tools import Sprite, SMALL_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, VERY_SMALL_IMAGE_SIZE
-from custom_utils.collisions import check_collisions_between_tilemap_and_lines
+import os
+from gr_kinematic_sim.custom_utils.object_tools import Sprite, SMALL_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, VERY_SMALL_IMAGE_SIZE
+from gr_kinematic_sim.custom_utils.collisions import check_collisions_between_tilemap_and_lines
+from ament_index_python.packages import get_package_share_directory
 
-
+pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr_kinematic_sim/"
 
 class Lidar(Sprite):
     def __init__(self, x, y, image, screen, offset_x, offset_y, num_rays, ray_length_px):
@@ -53,6 +55,6 @@ class Lidar(Sprite):
 
 class LidarB1(Lidar):
     def __init__(self, screen):
-        super().__init__(200, 200, pg.image.load('sprites/LidarBig.png'), screen, 0, 0, 60, 180)
+        super().__init__(200, 200, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/LidarBig.png'), screen, 0, 0, 60, 180)
 
 

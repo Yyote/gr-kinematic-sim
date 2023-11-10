@@ -2,7 +2,7 @@ import pygame
 import pytmx
 import math
 from copy import copy
-from custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix
+from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix
 
 DEFAULT_IMAGE_SIZE = (50, 50)
 SMALL_IMAGE_SIZE = (25, 25)
