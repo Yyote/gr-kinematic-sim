@@ -33,6 +33,7 @@ robot1 = Robot(200, 200, pg.image.load('sprites/robots/wheeled.png'), screen, gl
 robot1.set_sensors(sensors1)
 
 
+
 all_sprites.append(robot1)
 
 running = True
