@@ -117,6 +117,8 @@ class Robot(PhysicalObject):
             sensor.set_center_position(self.rect.x + self.rect.width / 2, self.rect.y + self.rect.height / 2, self._current_rotation)
             sensor.draw()
             sensor.logic(tilemap)
+            # vot zdes vizivajetsa
+            # tilemap.process_collisions(collisions)
     
     def draw(self, offset_x, offset_y, tilemap):
         super().draw(offset_x, offset_y)
@@ -128,6 +130,7 @@ class Robot(PhysicalObject):
             raise TypeError('`sensors` must be an array!')
             quit()
         self.sensors = sensors
+
 
 
 
@@ -163,4 +166,14 @@ class TiledMap():
         self.mapSurface = pygame.Surface((self.mapwidth, self.mapheight))
         self._render(self.mapSurface)
         return self.mapSurface
+    
+    
+class chtoto(TiledMap):
+    def __init__(self):
+        # Nado zapolnit'
+        pass
 
+    def process_collisions(self, collisions):
+        # kakaya to logic
+        # Otkrivajutsya kletki
+        pass
