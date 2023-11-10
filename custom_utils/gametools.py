@@ -53,22 +53,23 @@ def handle_key_events():
 def handle_offset_change(offset_x, offset_y):
     keys = pg.key.get_pressed()
     if keys[pg.K_w]:
-        offset_y -= 5
-    if keys[pg.K_s]:
         offset_y += 5
+    if keys[pg.K_s]:
+        offset_y -= 5
     if keys[pg.K_a]:
-        offset_x -= 5
-    if keys[pg.K_d]:
         offset_x += 5
+    if keys[pg.K_d]:
+        offset_x -= 5
     if keys[pg.K_BACKSPACE]:
         offset_x = 0
         offset_y = 0
     return offset_x, offset_y
 
 
-def draw_every_sprite_in_list(list_, offset_x, offset_y):
+def draw_every_sprite_in_list(list_, offset_x, offset_y, tilemap):
     for sprite in list_:
-        sprite.draw(offset_x, offset_y)
+        sprite.update_offset(offset_x, offset_y)
+        sprite.draw(offset_x, offset_y, tilemap)
         
 
 def scroll_screen_with_mouse(screen_width, screen_height, offset_x, offset_y):

@@ -5,17 +5,21 @@ from copy import copy
 from custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix
 
 DEFAULT_IMAGE_SIZE = (50, 50)
+SMALL_IMAGE_SIZE = (25, 25)
+VERY_SMALL_IMAGE_SIZE = (12, 12)
 
 class Sprite(pygame.sprite.Sprite):
-    def __init__(self, x, y, image, screen):
+    def __init__(self, x, y, image, screen, offset_x, offset_y, image_size=DEFAULT_IMAGE_SIZE):
         super().__init__()
-        self.image = pygame.transform.scale(image, DEFAULT_IMAGE_SIZE)
-        self._original_image = pygame.transform.scale(image, DEFAULT_IMAGE_SIZE)
+        self.image = pygame.transform.scale(image, image_size)
+        self._original_image = pygame.transform.scale(image, image_size)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         self.screen = screen
         self._current_rotation = 0
+        self.curr_offset_x = offset_x
+        self.curr_offset_y = offset_y
 
     def rotate(self, degrees):
         self._current_rotation += degrees
@@ -23,24 +27,31 @@ class Sprite(pygame.sprite.Sprite):
         self.image = pygame.transform.rotozoom(self._original_image, self._current_rotation, 1)
         self.rect = self.image.get_rect(center=self.rect.center)
     
+    def set_rotation(self, angle_deg):
+        self._current_rotation = angle_deg
+        normalise_in_range(0, 360, self._current_rotation)
+        self.image = pygame.transform.rotozoom(self._original_image, self._current_rotation, 1)
+        self.rect = self.image.get_rect(center=self.rect.center)
     
     def move(self, x, y, degrees=0):
         self.rect.x += x
         self.rect.y += y
         self.rotate(degrees)
     
-    def draw(self, offset_x, offset_y):
+    def draw(self):
         rect_to_draw = copy(self.rect)
-        rect_to_draw.x += offset_x
-        rect_to_draw.y += offset_y
+        rect_to_draw.x += self.curr_offset_x
+        rect_to_draw.y += self.curr_offset_y
         self.screen.blit(self.image, rect_to_draw)
-        
-        
-        
+    
+    def update_offset(self, x, y):
+        self.curr_offset_x = x
+        self.curr_offset_y = y
+    
 
 class PhysicalObject(Sprite):
-    def __init__(self, x, y, image, screen, mass, friction_multiplier=0.95):
-        super().__init__(x, y, image, screen)
+    def __init__(self, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE):
+        super().__init__(x, y, image, screen, offset_x, offset_y, image_size)
         self.mass = mass
         self.friction_multiplier = friction_multiplier
         
@@ -65,11 +76,9 @@ class PhysicalObject(Sprite):
         
         self.ang_vel += self.ang_accel
 
-
     def apply_force_now_local(self, lin_force_x, lin_force_y, ang_force=0):
         local_force_x, local_force_y = rotation_matrix(lin_force_x, lin_force_y, -self._current_rotation * math.pi / 180)
         self.apply_force_now(local_force_x, local_force_y, ang_force)
-    
     
     def _friction(self):
             self.lin_vel_x *= self.friction_multiplier
@@ -92,8 +101,34 @@ class PhysicalObject(Sprite):
 
 
     def draw(self, offset_x, offset_y):
-        super().draw(offset_x, offset_y)
+        self.update_offset(offset_x, offset_y)
+        super().draw()
         self._move()
+
+
+class Robot(PhysicalObject):
+    def __init__(self, x, y, image, screen, offset_x, offset_y, mass=1, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE):
+        super().__init__(x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size)
+        self.sensors = None
+    
+    def call_sensors(self, tilemap):
+        for sensor in self.sensors:
+            sensor.update_offset(self.curr_offset_x, self.curr_offset_y)
+            sensor.set_center_position(self.rect.x + self.rect.width / 2, self.rect.y + self.rect.height / 2, self._current_rotation)
+            sensor.draw()
+            sensor.logic(tilemap)
+    
+    def draw(self, offset_x, offset_y, tilemap):
+        super().draw(offset_x, offset_y)
+        self.call_sensors(tilemap)
+    
+    def set_sensors(self, sensors=[]):
+        if type(sensors) != type([]):
+            print('TypeError: `sensors` must be an array!')
+            raise TypeError('`sensors` must be an array!')
+            quit()
+        self.sensors = sensors
+
 
 
 
