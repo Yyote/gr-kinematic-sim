@@ -1,9 +1,12 @@
 import pygame
 import pytmx
 import math
+import rclpy
+from geometry_msgs.msg import PoseStamped, TwistStamped, Twist
 from copy import copy
-from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix
+from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix, EulerAngles
 from gr_kinematic_sim.custom_utils.collisions import check_kinematic_collision_between_tilemap_and_rect
+from gr_kinematic_sim.custom_utils.gametools import tick_rate
 
 DEFAULT_IMAGE_SIZE = (50, 50)
 SMALL_IMAGE_SIZE = (25, 25)
@@ -52,7 +55,7 @@ class Sprite(pygame.sprite.Sprite):
 
 class PhysicalObject(Sprite):
     def __init__(self, name, tilemap, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE, dynamic_model=True):
-        super().__init__(x, y, image, screen, offset_x, offset_y, image_size)
+        super().__init__(x, y, image, screen, offset_x, offset_y, image_size=image_size)
         self.mass = mass
         self.friction_multiplier = friction_multiplier
         
@@ -146,9 +149,19 @@ class PhysicalObject(Sprite):
 
 
 class Robot(PhysicalObject):
-    def __init__(self, name, tilemap, x, y, image, screen, offset_x, offset_y, mass=1, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE, dynamic_model=True):
-        super().__init__(name, tilemap, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size, dynamic_model)
+    def __init__(self, node, name, tilemap, x, y, image, screen, offset_x, offset_y, mass=1, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE, dynamic_model=True):
+        super().__init__(name, tilemap, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size=image_size, dynamic_model=dynamic_model)
         self.sensors = None
+        self.node = node
+        # self.node = rclpy.node.Node()
+        self.pose_pub = self.node.create_publisher(PoseStamped, f"{name}/position", 10)
+        # self.cmd_vel_sub = self.node.create_subscription(TwistStamped, f"{name}/cmd_vel", self.cmd_vel_cb, 10)
+        
+    
+    def cmd_vel_cb(self, msg):
+        # msg = TwistStamped()
+        # msg.twist = Twist()
+        self.set_local_velocity(msg.twist.linear.x * 32 / tick_rate, msg.twist.linear.y * 32 / tick_rate, msg.twist.angular.z * 32 / tick_rate)
     
     def call_sensors(self):
         for sensor in self.sensors:
@@ -160,6 +173,20 @@ class Robot(PhysicalObject):
     def draw(self, offset_x, offset_y):
         super().draw(offset_x, offset_y)
         self.call_sensors()
+        
+        pose_msg = PoseStamped()
+
+        pose_msg.header.stamp = self.node.get_clock().now().to_msg()
+        pose_msg.header.frame_id = "map"
+
+        pose_msg.pose.position.x = (- self.rect.centery) / 32.0
+        pose_msg.pose.position.y = (- self.rect.centerx) / 32.0
+        pose_msg.pose.position.z = 0.0
+
+        angles = EulerAngles()
+        pose_msg.pose.orientation = angles.setRPY_of_quaternion(0, 0, self._current_rotation * math.pi / 180)
+        self.pose_pub.publish(pose_msg)
+        
     
     def set_sensors(self, sensors=[]):
         if type(sensors) != type([]):
@@ -170,9 +197,16 @@ class Robot(PhysicalObject):
 
 
 class AckermanRobot(Robot):
-    def __init__(self, name, tilemap, x, y, image, screen, offset_x, offset_y, mass=1, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE):
-        super().__init__(name, tilemap, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size, False)
-        
+    def __init__(self, node, name, tilemap, x, y, image, screen, offset_x, offset_y, mass=1, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE):
+        super().__init__(node, name, tilemap, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size=image_size, dynamic_model=False)
+        self.cmd_vel_sub = self.node.create_subscription(TwistStamped, f"{name}/cmd_vel", self.cmd_vel_cb, 10)
+    
+    def cmd_vel_cb(self, msg):
+        # msg = TwistStamped()
+        # msg.twist = Twist()
+        print(msg)
+        self.set_local_velocity(msg.twist.linear.x * 32 / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
+    
     def set_local_velocity(self, vel, ang_vel):
         self.lin_vel_x = vel * math.cos(-self._current_rotation * math.pi / 180 - math.pi / 2)
         self.lin_vel_y = vel * math.sin(-self._current_rotation * math.pi / 180 - math.pi / 2)

@@ -90,7 +90,7 @@ class Lidar(Sprite):
     
     def set_center_position(self, center_x, center_y, rotation_deg):
         self.rect.centerx = center_x
-        self.rect.centery = center_y
+        self.rect.centery = center_y 
         self.set_rotation(rotation_deg)
 
 

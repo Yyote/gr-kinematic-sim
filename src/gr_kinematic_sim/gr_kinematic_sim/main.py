@@ -3,6 +3,7 @@ import rclpy
 import os
 
 from rclpy.node import Node
+from geometry_msgs.msg import TwistStamped, Twist
 
 from ament_index_python.packages import get_package_share_directory
 from gr_kinematic_sim.custom_utils.sensors import Lidar, LidarB1
@@ -10,6 +11,7 @@ from gr_kinematic_sim.custom_utils.collisions import check_dynamic_collisions_be
 from gr_kinematic_sim.custom_utils.object_tools import Sprite, TiledMap, PhysicalObject, Robot, AckermanRobot
 
 from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity
+from gr_kinematic_sim.custom_utils.gametools import tick_rate
 
 pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr_kinematic_sim/"
 
@@ -17,6 +19,7 @@ pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr
 class SimNode(Node):
     def __init__(self):
         super().__init__('gr_kinematic_sim')
+        self.cmd_vel_pub = self.create_publisher(TwistStamped, "/robot1/cmd_vel", 10)
 
 
 
@@ -34,6 +37,8 @@ def main():
     map_img = gmap.make_map()
     map_rect = map_img.get_rect()
 
+    print(f"map_img.height : {map_rect.width}; map_img.width : {map_rect.width}")
+
 
     width = 1280
     height = 720
@@ -47,7 +52,7 @@ def main():
     all_sprites = []
 
     sensors1 = [LidarB1("/robot1", screen, node)]
-    robot1 = AckermanRobot("/robot1", gmap, 200, 200, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/wheeled.png'), screen, global_offset_x, global_offset_y, 2, 0.9, (25, 25))
+    robot1 = AckermanRobot(node, "/robot1", gmap, 200, 200, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/wheeled.png'), screen, global_offset_x, global_offset_y, 2, 0.9, (25, 25))
     robot1.set_sensors(sensors1)
 
 
@@ -69,14 +74,16 @@ def main():
         # check_kinematic_collisions_between_tilemap_and_spritelist(gmap, all_sprites)
         check_collisions_in_spritelist(all_sprites)
         
-        handle_keypresses_through_velocity(robot1)
+        handle_keypresses_through_velocity(robot1, node)
         
         handle_key_events()
         
         draw_every_sprite_in_list(all_sprites, global_offset_x, global_offset_y)
         
+        pg.draw.circle(screen, (255, 255, 0), (100, 100), 100, 5)
         pg.display.update()
-        clock.tick(20)
+        clock.tick(tick_rate)
+        rclpy.spin_once(node)
     
 
 if __name__ == '__main__':

@@ -1,4 +1,8 @@
 import pygame as pg
+import math
+from geometry_msgs.msg import TwistStamped
+
+tick_rate = 30
 
 
 def handle_keypresses(sprite):
@@ -43,29 +47,33 @@ def handle_keypresses_through_force(sprite):
         sprite.apply_force_now_local(0, 0, -0.1)
 
 
-def handle_keypresses_through_velocity(sprite):
+def handle_keypresses_through_velocity(sprite, node):
     """
     Brief: 
         Работает только с классом custom_utils.object_tools.Sprite
     """
+    msg = TwistStamped()
     keys = pg.key.get_pressed()
     vel = 0
     ang_vel = 0
     
     if keys[pg.K_UP]:
-        vel += 5
+        vel += 2
         if keys[pg.K_LEFT]:
-            ang_vel += 10
+            ang_vel += 159
         if keys[pg.K_RIGHT]:
-            ang_vel -= 10
+            ang_vel -= 159
     if keys[pg.K_DOWN]:
-        vel -= 5
+        vel -= 2
         if keys[pg.K_LEFT]:
-            ang_vel += 10
+            ang_vel -= 159
         if keys[pg.K_RIGHT]:
-            ang_vel -= 10
+            ang_vel += 159
     
-    sprite.set_local_velocity(vel, ang_vel)
+    # sprite.set_local_velocity(vel, ang_vel)
+    msg.twist.linear.x = float(vel)
+    msg.twist.angular.z = float(ang_vel * math.pi / 180)
+    node.cmd_vel_pub.publish(msg)
 
 def handle_key_events():
     keys = pg.key.get_pressed()
