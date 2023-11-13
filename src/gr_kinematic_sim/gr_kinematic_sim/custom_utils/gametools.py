@@ -43,11 +43,34 @@ def handle_keypresses_through_force(sprite):
         sprite.apply_force_now_local(0, 0, -0.1)
 
 
+def handle_keypresses_through_velocity(sprite):
+    """
+    Brief: 
+        Работает только с классом custom_utils.object_tools.Sprite
+    """
+    keys = pg.key.get_pressed()
+    vel = 0
+    ang_vel = 0
+    
+    if keys[pg.K_UP]:
+        vel += 5
+        if keys[pg.K_LEFT]:
+            ang_vel += 10
+        if keys[pg.K_RIGHT]:
+            ang_vel -= 10
+    if keys[pg.K_DOWN]:
+        vel -= 5
+        if keys[pg.K_LEFT]:
+            ang_vel += 10
+        if keys[pg.K_RIGHT]:
+            ang_vel -= 10
+    
+    sprite.set_local_velocity(vel, ang_vel)
+
 def handle_key_events():
     keys = pg.key.get_pressed()
     if keys[pg.K_ESCAPE]:
         pg.quit()
-
 
 
 def handle_offset_change(offset_x, offset_y):
@@ -66,10 +89,10 @@ def handle_offset_change(offset_x, offset_y):
     return offset_x, offset_y
 
 
-def draw_every_sprite_in_list(list_, offset_x, offset_y, tilemap):
+def draw_every_sprite_in_list(list_, offset_x, offset_y):
     for sprite in list_:
         sprite.update_offset(offset_x, offset_y)
-        sprite.draw(offset_x, offset_y, tilemap)
+        sprite.draw(offset_x, offset_y)
         
 
 def scroll_screen_with_mouse(screen_width, screen_height, offset_x, offset_y):

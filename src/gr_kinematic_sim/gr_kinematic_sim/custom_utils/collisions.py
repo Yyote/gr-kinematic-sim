@@ -2,8 +2,7 @@ from gr_kinematic_sim.custom_utils.mathtools import make_non_zero, limit
 import math as m
 
 
-def check_collisions_between_tilemap_and_spritelist(tilemap, spritelist):
-    
+def check_dynamic_collisions_between_tilemap_and_spritelist(tilemap, spritelist):
     for i in range(len(tilemap.collider_list)):
         for j in range(len(spritelist)):
             if spritelist[j].rect.colliderect(tilemap.collider_list[i]):
@@ -18,6 +17,13 @@ def check_collisions_between_tilemap_and_spritelist(tilemap, spritelist):
                 
                 spritelist[j].ang_accel = 0
                 spritelist[j].ang_vel = - spritelist[j].ang_vel
+
+
+def check_kinematic_collision_between_tilemap_and_rect(tilemap, rect):
+    for i in range(len(tilemap.collider_list)):
+        if rect.colliderect(tilemap.collider_list[i]):
+            return True
+    return False
 
 
 def check_collisions_in_spritelist(spritelist):
@@ -64,7 +70,6 @@ def check_collisions_between_tilemap_and_lines(screen, tilemap, lines):
             start_x1 = x1
             start_y1 = y1
             
-            # print(tilemap.collider_list[i].clipline((x1, y1), (x2, y2)))
             if tilemap.collider_list[i].clipline((x1, y1), (x2, y2)):
                 for k in range(50):
                     dr = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5 * (k / 50)
@@ -86,7 +91,7 @@ def check_collisions_between_tilemap_and_lines(screen, tilemap, lines):
                 if dr < smallest_dr:
                     smallest_dr = dr
                     smallest_idx = i
-            
             col_points.append(collisions[j][smallest_idx])
-        
+        else:
+            col_points.append((float('inf'),float('inf')))
     return col_points

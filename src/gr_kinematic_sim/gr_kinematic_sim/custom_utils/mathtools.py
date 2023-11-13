@@ -23,6 +23,7 @@ def normalise_in_range(lower_bound, upper_bound, var):
         var += range_
     elif var > upper_bound:
         var -= range_
+    return var
 
 
 def sgn(num):
