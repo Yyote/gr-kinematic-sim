@@ -72,7 +72,9 @@ def handle_keypresses_through_velocity(sprite, node):
     msg.header.frame_id = 'robot1/base_link'
     msg.twist.linear.x = float(vel)
     msg.twist.angular.z = float(ang_vel * math.pi / 180)
-    node.cmd_vel_pub.publish(msg)
+    if abs(vel) > 1 or abs(ang_vel) > 1:
+        node.cmd_vel_pub.publish(msg)
+        # pass
 
 
 
@@ -99,7 +101,9 @@ def handle_keypresses_through_velocity_omni(sprite, node):
     msg.header.frame_id = 'robot1/base_link'
     msg.twist.linear.x = float(vel)
     msg.twist.linear.y = float(ang_vel)
-    node.cmd_vel_pub.publish(msg)
+    if abs(vel) > 1 or abs(ang_vel) > 1:
+        # node.cmd_vel_pub.publish(msg)
+        pass
 
 
 

@@ -49,10 +49,10 @@ class Robot(PhysicalObject):
         self.transform_broadcaster.sendTransform(self.lidar_transform)
 
     
-    def cmd_vel_cb(self, msg):
-        # msg = TwistStamped()
-        # msg.twist = Twist()
-        self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, msg.twist.linear.y * WORLD_SCALE / tick_rate, msg.twist.angular.z * WORLD_SCALE / tick_rate)
+    # def cmd_vel_cb(self, msg):
+    #     # msg = TwistStamped()
+    #     # msg.twist = Twist()
+    #     self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, msg.twist.linear.y * WORLD_SCALE / tick_rate, msg.twist.angular.z * WORLD_SCALE / tick_rate)
     
     def call_sensors(self):
         for sensor in self.sensors:
@@ -81,7 +81,11 @@ class Robot(PhysicalObject):
         pose_msg.pose.position.z = 0.0
 
         angles = EulerAngles()
-        pose_msg.pose.orientation = angles.setRPY_of_quaternion(0, 0, self._current_rotation * math.pi / 180)
+        orientation = copy(self._current_rotation)
+        if orientation > 180:
+            orientation - 360
+        print(f"self._current_rotation: {orientation}")
+        pose_msg.pose.orientation = angles.setRPY_of_quaternion(0, 0, orientation * math.pi / 180)
         self.pose_pub.publish(pose_msg)
         
         transform.header.stamp = self.node.get_clock().now().to_msg()
@@ -229,17 +233,19 @@ class TrackedRobot(Robot):
         self.ang_max = math.pi 
 
     def cmd_vel_cb(self, msg):
-        if abs(msg.twist.linear.x) > self.linear_max:
-            msg.twist.linear.x = self.linear_max * sgn_wo_zero(msg.twist.linear.x)
+        if (msg != Twist()):
+            if abs(msg.twist.linear.x) > self.linear_max:
+                msg.twist.linear.x = self.linear_max * sgn_wo_zero(msg.twist.linear.x)
 
-        if abs(msg.twist.angular.z) > self.ang_max:
-            msg.twist.angular.z = self.ang_max * sgn_wo_zero(self.min_rotation_radius)
-        
-        self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
+            if abs(msg.twist.angular.z) > self.ang_max:
+                msg.twist.angular.z = self.ang_max * sgn_wo_zero(msg.twist.angular.z)
+            print(msg)
+            self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
     
     def set_local_velocity(self, vel, ang_vel):
         self.lin_vel_x = vel * math.cos(-self._current_rotation * math.pi / 180 - math.pi / 2)
         self.lin_vel_y = vel * math.sin(-self._current_rotation * math.pi / 180 - math.pi / 2)
+        
         self.ang_vel = ang_vel
         # if abs(vel) -0.2 < 0:
         #     self.ang_vel = 0
