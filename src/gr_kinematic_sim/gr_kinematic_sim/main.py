@@ -1,0 +1,92 @@
+import pygame as pg
+import rclpy
+import os
+
+from rclpy.node import Node
+from geometry_msgs.msg import TwistStamped, Twist
+
+from ament_index_python.packages import get_package_share_directory
+from gr_kinematic_sim.custom_utils.sensors import Lidar, LidarB1
+from gr_kinematic_sim.custom_utils.collisions import check_dynamic_collisions_between_tilemap_and_spritelist, check_collisions_in_spritelist, check_collisions_between_tilemap_and_lines
+from gr_kinematic_sim.custom_utils.object_tools import Sprite, TiledMap, PhysicalObject
+from gr_kinematic_sim.custom_utils.robots import Robot, AckermanRobot, RobotFactory
+
+from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity
+from gr_kinematic_sim.custom_utils.gametools import tick_rate
+
+pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr_kinematic_sim/"
+
+
+class SimNode(Node):
+    def __init__(self):
+        super().__init__('gr_kinematic_sim')
+        self.cmd_vel_pub = self.create_publisher(TwistStamped, "/robot1/cmd_vel", 10)
+
+
+
+
+
+def main():
+    rclpy.init()
+    node = SimNode()
+    
+    pg.init()
+    screen = pg.display.set_mode((1, 1))
+
+    clock = pg.time.Clock()
+    gmap = TiledMap(f'{pkg_dir}gr_kinematic_sim/maps/map_test.tmx')
+    map_img = gmap.make_map()
+    map_rect = map_img.get_rect()
+
+    print(f"map_img.height : {map_rect.width}; map_img.width : {map_rect.width}")
+
+
+    width = 1280
+    height = 720
+
+    global_offset_x = 0
+    global_offset_y = 0
+
+    screen = pg.display.set_mode((width, height))
+    pg.display.set_caption('My game')
+
+    all_sprites = []
+
+    factory = RobotFactory(node, gmap, screen)
+
+    robot1 = factory.create_ackerman_with_lidar(200, 200)
+    robot2 = factory.create_ackerman_with_lidar(350, 150)
+
+
+
+    all_sprites.append(robot1)
+    all_sprites.append(robot2)
+
+    running = True
+    while running:
+        global_offset_x, global_offset_y = handle_offset_change(global_offset_x, global_offset_y)
+        global_offset_x, global_offset_y = scroll_screen_with_mouse(width, height, global_offset_x, global_offset_y)
+        
+        screen.fill((0,0,0))
+        screen.blit(map_img, (0 + global_offset_x, 0 + global_offset_y))
+        
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
+        
+        # check_kinematic_collisions_between_tilemap_and_spritelist(gmap, all_sprites)
+        # check_collisions_in_spritelist(all_sprites)
+        
+        handle_keypresses_through_velocity(robot1, node)
+        
+        handle_key_events()
+        
+        draw_every_sprite_in_list(all_sprites, global_offset_x, global_offset_y)
+        
+        pg.display.update()
+        clock.tick(tick_rate)
+        rclpy.spin_once(node)
+    
+
+if __name__ == '__main__':
+    main()
