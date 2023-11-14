@@ -66,15 +66,22 @@ def check_collisions_between_tilemap_and_lines(screen, tilemap, lines):
     for j in range(len(lines)):
         start_x1 = None
         start_y1 = None
+        x1 = lines[j][0][0]
+        y1 = lines[j][0][1]
+        
+        x2 = lines[j][1][0]
+        y2 = lines[j][1][1]
+        
+        line_length = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
         for i in range(len(tilemap.collider_list)):
-            x1 = lines[j][0][0]
-            y1 = lines[j][0][1]
-            
-            x2 = lines[j][1][0]
-            y2 = lines[j][1][1]
             
             start_x1 = x1
             start_y1 = y1
+            
+            dr_local = ((x1 - tilemap.collider_list[i].centerx) ** 2 + (y1 - tilemap.collider_list[i].centery) ** 2) ** 0.5
+            
+            if dr_local > line_length:
+                continue
             
             if tilemap.collider_list[i].clipline((x1, y1), (x2, y2)):
                 for k in range(50):
