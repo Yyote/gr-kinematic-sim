@@ -25,6 +25,12 @@ def check_kinematic_collision_between_tilemap_and_rect(tilemap, rect):
             return True
     return False
 
+def check_kinematic_collision_between_spritelis_and_rect(spritelist, sprite):
+    for i in range(len(spritelist)):
+        if sprite.rect.colliderect(spritelist[i].rect) and spritelist[i].name != sprite.name:
+            return True
+    return False
+
 
 def check_collisions_in_spritelist(spritelist):
     for i in range(len(spritelist)):

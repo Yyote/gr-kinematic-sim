@@ -4,7 +4,7 @@ import math as m
 import os
 import rclpy
 from sensor_msgs.msg import LaserScan
-from gr_kinematic_sim.custom_utils.object_tools import Sprite, SMALL_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, VERY_SMALL_IMAGE_SIZE
+from gr_kinematic_sim.custom_utils.object_tools import Sprite, SMALL_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, VERY_SMALL_IMAGE_SIZE, WORLD_SCALE
 from gr_kinematic_sim.custom_utils.collisions import check_collisions_between_tilemap_and_lines
 from ament_index_python.packages import get_package_share_directory
 
@@ -19,12 +19,13 @@ class Lidar(Sprite):
         self.ray_length_px = ray_length_px
         self.node = node
         self.pub = node.create_publisher(LaserScan, f"{robot_name}/scan", 10)
+        self.robot_name = robot_name
         
         self.angle_min = - m.pi
         self.angle_max = m.pi
         self.angle_increment = m.pi / 180.0 * (360 / self.num_rays)
         self.range_min = 0.0
-        self.range_max = ray_length_px / 32.0
+        self.range_max = ray_length_px / WORLD_SCALE
     
     def _draw_line(self, screen, x1, y1, x2, y2):
         d.aaline(screen, (0, 0, 255 ), (x1 + self.curr_offset_x, y1 + self.curr_offset_y), (x2 + self.curr_offset_x, y2 + self.curr_offset_y), 1)
@@ -60,7 +61,7 @@ class Lidar(Sprite):
         msg.time_increment = msg.scan_time / self.num_rays
         
         msg.header.stamp = self.node.get_clock().now().to_msg()
-        msg.header.frame_id = "laser"
+        msg.header.frame_id = f"{self.robot_name}/laser"
 
         for i in range(len(collisions)):
             if collisions[-i] is not None:
@@ -72,7 +73,7 @@ class Lidar(Sprite):
                 
                 if x2 is not float('inf'):
                     dr = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5 
-                    msg.ranges.append(dr / 32)
+                    msg.ranges.append(dr / WORLD_SCALE)
                 else:
                     msg.ranges.append(float('inf'))
         

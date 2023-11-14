@@ -8,7 +8,8 @@ from geometry_msgs.msg import TwistStamped, Twist
 from ament_index_python.packages import get_package_share_directory
 from gr_kinematic_sim.custom_utils.sensors import Lidar, LidarB1
 from gr_kinematic_sim.custom_utils.collisions import check_dynamic_collisions_between_tilemap_and_spritelist, check_collisions_in_spritelist, check_collisions_between_tilemap_and_lines
-from gr_kinematic_sim.custom_utils.object_tools import Sprite, TiledMap, PhysicalObject, Robot, AckermanRobot
+from gr_kinematic_sim.custom_utils.object_tools import Sprite, TiledMap, PhysicalObject
+from gr_kinematic_sim.custom_utils.robots import Robot, AckermanRobot, RobotFactory
 
 from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity
 from gr_kinematic_sim.custom_utils.gametools import tick_rate
@@ -51,13 +52,15 @@ def main():
 
     all_sprites = []
 
-    sensors1 = [LidarB1("/robot1", screen, node)]
-    robot1 = AckermanRobot(node, "/robot1", gmap, 200, 200, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/wheeled.png'), screen, global_offset_x, global_offset_y, 2, 0.9, (25, 25))
-    robot1.set_sensors(sensors1)
+    factory = RobotFactory(node, gmap, screen)
+
+    robot1 = factory.create_ackerman_with_lidar(200, 200)
+    robot2 = factory.create_ackerman_with_lidar(350, 150)
 
 
 
     all_sprites.append(robot1)
+    all_sprites.append(robot2)
 
     running = True
     while running:
@@ -72,7 +75,7 @@ def main():
                 running = False
         
         # check_kinematic_collisions_between_tilemap_and_spritelist(gmap, all_sprites)
-        check_collisions_in_spritelist(all_sprites)
+        # check_collisions_in_spritelist(all_sprites)
         
         handle_keypresses_through_velocity(robot1, node)
         
@@ -80,7 +83,6 @@ def main():
         
         draw_every_sprite_in_list(all_sprites, global_offset_x, global_offset_y)
         
-        pg.draw.circle(screen, (255, 255, 0), (100, 100), 100, 5)
         pg.display.update()
         clock.tick(tick_rate)
         rclpy.spin_once(node)

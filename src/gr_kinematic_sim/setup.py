@@ -28,6 +28,7 @@ setup(
         package_name + '.custom_utils.gametools',
         package_name + '.custom_utils.mathtools',
         package_name + '.custom_utils.object_tools',
-        package_name + '.custom_utils.sensors'
+        package_name + '.custom_utils.sensors',
+        package_name + '.custom_utils.robots'
     ],
 )
