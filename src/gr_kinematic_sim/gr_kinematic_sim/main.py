@@ -11,7 +11,7 @@ from gr_kinematic_sim.custom_utils.collisions import check_dynamic_collisions_be
 from gr_kinematic_sim.custom_utils.object_tools import Sprite, TiledMap, PhysicalObject
 from gr_kinematic_sim.custom_utils.robots import Robot, AckermanRobot, RobotFactory
 
-from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity
+from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity, handle_keypresses_through_velocity_omni
 from gr_kinematic_sim.custom_utils.gametools import tick_rate
 
 pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr_kinematic_sim/"
@@ -54,13 +54,15 @@ def main():
 
     factory = RobotFactory(node, gmap, screen)
 
-    robot1 = factory.create_ackerman_with_lidar(200, 200)
+    robot1 = factory.create_omni_with_lidar(200, 200)
     robot2 = factory.create_ackerman_with_lidar(350, 150)
+    robot3 = factory.create_tracked_with_lidar(350, 800)
 
 
 
     all_sprites.append(robot1)
     all_sprites.append(robot2)
+    all_sprites.append(robot3)
 
     running = True
     while running:
@@ -77,7 +79,7 @@ def main():
         # check_kinematic_collisions_between_tilemap_and_spritelist(gmap, all_sprites)
         # check_collisions_in_spritelist(all_sprites)
         
-        handle_keypresses_through_velocity(robot1, node)
+        handle_keypresses_through_velocity_omni(robot1, node)
         
         handle_key_events()
         

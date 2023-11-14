@@ -147,10 +147,21 @@ class AckermanRobot(Robot):
     def __init__(self, node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass=1, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE):
         super().__init__(node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size=image_size, dynamic_model=False)
         self.cmd_vel_sub = self.node.create_subscription(TwistStamped, f"{name}/cmd_vel", self.cmd_vel_cb, 10)
+        self.linear_max = 1.0
+        self.min_rotation_radius = self.linear_max ** 2 / (self.mass * 9.81 * self.friction_multiplier)
     
     def cmd_vel_cb(self, msg):
         # msg = TwistStamped()
         # msg.twist = Twist()
+        if abs(msg.twist.linear.x) > self.linear_max:
+            msg.twist.linear.x = self.linear_max * sgn_wo_zero(msg.twist.linear.x)
+        
+        acv = msg.twist.linear.x ** 2 / self.min_rotation_radius
+        acw = msg.twist.angular.z ** 2 * self.min_rotation_radius
+        
+        if acw > acv:
+            msg.twist.angular.z = acv / self.min_rotation_radius
+        
         self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
     
     def set_local_velocity(self, vel, ang_vel):
@@ -173,6 +184,75 @@ class AckermanRobot(Robot):
 
 
 
+class OmniRobot(Robot):
+    def __init__(self, node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass=1, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE):
+        super().__init__(node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size=image_size, dynamic_model=False)
+        self.cmd_vel_sub = self.node.create_subscription(TwistStamped, f"{name}/cmd_vel", self.cmd_vel_cb, 10)
+        self.linear_max = 1
+    
+    def cmd_vel_cb(self, msg):
+        # msg = TwistStamped()
+        # msg.twist = Twist()
+        vx = -msg.twist.linear.y 
+        vy = -msg.twist.linear.x 
+
+        if ((vx ** 2 + vy ** 2) > self.linear_max ** 2):
+            alpha = math.atan2(vy, vx)
+            vx = math.cos(alpha) * self.linear_max
+            vy = math.sin(alpha) * self.linear_max
+            
+        print(f"self.linear_max: {self.linear_max}")
+        print(f"vx: {vx}")
+        print(f"vy: {vy}")
+        print(f"vx ** 2 + vy ** 2: {vx ** 2 + vy ** 2}")
+
+        self.set_local_velocity(vx * WORLD_SCALE / tick_rate, vy * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
+    
+    def apply_force_now(self, lin_force_x, lin_force_y, ang_force=0):
+        if self.dynamic_model == False:
+            raise Exception('Dynamic modeling is turned off for this model, so this function should not be called. Please, check your code')
+            quit()
+        
+    def apply_force_now_local(self, lin_force_x, lin_force_y, ang_force=0):
+        if self.dynamic_model == False:
+            raise Exception('Dynamic modeling is turned off for this model, so this function should not be called. Please, check your code')
+            quit()
+
+
+
+
+class TrackedRobot(Robot):
+    def __init__(self, node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass=1, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE):
+        super().__init__(node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size=image_size, dynamic_model=False)
+        self.cmd_vel_sub = self.node.create_subscription(TwistStamped, f"{name}/cmd_vel", self.cmd_vel_cb, 10)
+        self.linear_max = 1.0
+        self.ang_max = math.pi 
+
+    def cmd_vel_cb(self, msg):
+        if abs(msg.twist.linear.x) > self.linear_max:
+            msg.twist.linear.x = self.linear_max * sgn_wo_zero(msg.twist.linear.x)
+
+        if abs(msg.twist.angular.z) > self.ang_max:
+            msg.twist.angular.z = self.ang_max * sgn_wo_zero(self.min_rotation_radius)
+        
+        self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
+    
+    def set_local_velocity(self, vel, ang_vel):
+        self.lin_vel_x = vel * math.cos(-self._current_rotation * math.pi / 180 - math.pi / 2)
+        self.lin_vel_y = vel * math.sin(-self._current_rotation * math.pi / 180 - math.pi / 2)
+        self.ang_vel = ang_vel
+        # if abs(vel) -0.2 < 0:
+        #     self.ang_vel = 0
+    
+    def apply_force_now(self, lin_force_x, lin_force_y, ang_force=0):
+        if self.dynamic_model == False:
+            raise Exception('Dynamic modeling is turned off for this model, so this function should not be called. Please, check your code')
+            quit()
+        
+    def apply_force_now_local(self, lin_force_x, lin_force_y, ang_force=0):
+        if self.dynamic_model == False:
+            raise Exception('Dynamic modeling is turned off for this model, so this function should not be called. Please, check your code')
+            quit()
 
 
 
@@ -191,7 +271,29 @@ class RobotFactory:
         
     def create_ackerman_with_lidar(self, pos_x, pos_y):
         sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
-        robot = AckermanRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/wheeled.png'), self.screen, 0, 0, 2, 0.9, (25, 25))
+        robot = AckermanRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/wheeled2.png'), self.screen, 0, 0, 1, 0.9, (25, 25))
+        robot.set_sensors(sensors)
+        self.spritelist.append(robot)
+        if len(self.spritelist) > 1:
+            for i in range(len(self.spritelist)):
+                self.spritelist[self.robot_counter - 1].robot_factory.spritelist.append(robot)
+        self.robot_counter += 1
+        return robot
+        
+    def create_omni_with_lidar(self, pos_x, pos_y):
+        sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
+        robot = OmniRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/omniwheeled.png'), self.screen, 0, 0, 1, 0.9, (25, 25))
+        robot.set_sensors(sensors)
+        self.spritelist.append(robot)
+        if len(self.spritelist) > 1:
+            for i in range(len(self.spritelist)):
+                self.spritelist[self.robot_counter - 1].robot_factory.spritelist.append(robot)
+        self.robot_counter += 1
+        return robot
+    
+    def create_tracked_with_lidar(self, pos_x, pos_y):
+        sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
+        robot = TrackedRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/tracked.png'), self.screen, 0, 0, 1, 0.9, (25, 25))
         robot.set_sensors(sensors)
         self.spritelist.append(robot)
         if len(self.spritelist) > 1:
