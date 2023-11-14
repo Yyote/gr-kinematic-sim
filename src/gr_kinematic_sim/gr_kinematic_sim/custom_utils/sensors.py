@@ -57,7 +57,7 @@ class Lidar(Sprite):
         msg.angle_min = self.angle_min
         msg.range_max = self.range_max
         msg.range_min = self.range_min
-        msg.scan_time = 0.01
+        msg.scan_time = 0.0
         msg.time_increment = msg.scan_time / self.num_rays
         
         msg.header.stamp = self.node.get_clock().now().to_msg()

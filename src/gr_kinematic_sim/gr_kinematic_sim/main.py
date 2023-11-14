@@ -30,6 +30,9 @@ def main():
     rclpy.init()
     node = SimNode()
     
+    counter = 0
+    ck = tick_rate / 10
+    
     pg.init()
     screen = pg.display.set_mode((1, 1))
 
@@ -78,13 +81,20 @@ def main():
         handle_keypresses_through_velocity(robot1, node)
         
         handle_key_events()
-        
+        print("A")
         draw_every_sprite_in_list(all_sprites, global_offset_x, global_offset_y)
+        print("B")
         
         pg.display.update()
         clock.tick(tick_rate)
+        print("C")
+        
+        # if counter % ck == 0:
         rclpy.spin_once(node)
+        counter += 1
+        print("D")
     
 
 if __name__ == '__main__':
     main()
+    rclpy.shutdown()
