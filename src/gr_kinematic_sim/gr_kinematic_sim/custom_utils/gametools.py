@@ -1,5 +1,6 @@
 import pygame as pg
 import math
+import rclpy
 from geometry_msgs.msg import TwistStamped
 
 tick_rate = 30
@@ -71,6 +72,7 @@ def handle_keypresses_through_velocity(sprite, node):
             ang_vel += 159
     
     # sprite.set_local_velocity(vel, ang_vel)
+    msg.header.frame_id = 'robot1/base_link'
     msg.twist.linear.x = float(vel)
     msg.twist.angular.z = float(ang_vel * math.pi / 180)
     node.cmd_vel_pub.publish(msg)
