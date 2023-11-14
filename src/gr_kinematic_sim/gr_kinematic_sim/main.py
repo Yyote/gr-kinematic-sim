@@ -54,15 +54,11 @@ def main():
 
     factory = RobotFactory(node, gmap, screen)
 
-    robot1 = factory.create_omni_with_lidar(200, 200)
-    robot2 = factory.create_ackerman_with_lidar(350, 150)
-    robot3 = factory.create_tracked_with_lidar(350, 800)
+    robot1 = factory.create_tracked_with_lidar(200, 200)
 
 
 
     all_sprites.append(robot1)
-    all_sprites.append(robot2)
-    all_sprites.append(robot3)
 
     running = True
     while running:
@@ -79,7 +75,7 @@ def main():
         # check_kinematic_collisions_between_tilemap_and_spritelist(gmap, all_sprites)
         # check_collisions_in_spritelist(all_sprites)
         
-        handle_keypresses_through_velocity_omni(robot1, node)
+        handle_keypresses_through_velocity(robot1, node)
         
         handle_key_events()
         
