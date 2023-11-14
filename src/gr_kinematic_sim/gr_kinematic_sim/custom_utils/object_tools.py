@@ -125,7 +125,7 @@ class PhysicalObject(Sprite):
         self.lin_accel_y = 0
         self.ang_accel = 0
         
-        local_vel_x, local_vel_y = rotation_matrix(vel_x, vel_y, -self._current_rotation * math.pi / 180)
+        local_vel_x, local_vel_y = rotation_matrix(vel_x, vel_y, -self._current_rotation * math.pi / 180.0)
         
         self.lin_vel_x = local_vel_x
         self.lin_vel_y = local_vel_y
