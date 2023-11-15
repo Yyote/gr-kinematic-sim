@@ -10,6 +10,7 @@ from rclpy.time import Time
 from geometry_msgs.msg import PoseStamped, TwistStamped, Twist, PoseWithCovariance, TwistWithCovariance
 from nav_msgs.msg import Odometry
 from tf2_ros.transform_broadcaster import TransformBroadcaster, TransformStamped
+from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
 from gr_kinematic_sim.custom_utils.object_tools import PhysicalObject, DEFAULT_IMAGE_SIZE, SMALL_IMAGE_SIZE, VERY_SMALL_IMAGE_SIZE, pkg_dir, WORLD_SCALE
 from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix, EulerAngles
@@ -30,6 +31,7 @@ class Robot(PhysicalObject):
         self.pose_pub = self.node.create_publisher(PoseStamped, f"{name}/pose", 10)
         self.odom_pub = self.node.create_publisher(Odometry, f"{name}/odom", 10)
         self.transform_broadcaster = TransformBroadcaster(self.node)
+        self.lidar_transform_broadcaster = StaticTransformBroadcaster(self.node)
         self.previous_pose = None
         
         self.lidar_transform = TransformStamped()
@@ -46,7 +48,7 @@ class Robot(PhysicalObject):
         self.lidar_transform.transform.rotation.y = 0.0
         self.lidar_transform.transform.rotation.z = 0.0
         self.lidar_transform.transform.rotation.w = 1.0
-        self.transform_broadcaster.sendTransform(self.lidar_transform)
+        self.lidar_transform_broadcaster.sendTransform(self.lidar_transform)
 
     
     # def cmd_vel_cb(self, msg):
@@ -59,7 +61,7 @@ class Robot(PhysicalObject):
             sensor.update_offset(self.curr_offset_x, self.curr_offset_y)
             sensor.set_center_position(self.rect.x + self.rect.width / 2, self.rect.y + self.rect.height / 2, self._current_rotation)
             sensor.draw()
-            sensor.logic(self.tilemap)
+            sensor.logic(self.tilemap, self.robot_factory.spritelist, self.name)
     
     def draw(self, offset_x, offset_y):
         super().draw(offset_x, offset_y)

@@ -5,7 +5,7 @@ import os
 import rclpy
 from sensor_msgs.msg import LaserScan
 from gr_kinematic_sim.custom_utils.object_tools import Sprite, SMALL_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, VERY_SMALL_IMAGE_SIZE, WORLD_SCALE
-from gr_kinematic_sim.custom_utils.collisions import check_collisions_between_tilemap_and_lines
+from gr_kinematic_sim.custom_utils.collisions import find_lidar_collisions
 from ament_index_python.packages import get_package_share_directory
 
 pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr_kinematic_sim/"
@@ -48,9 +48,9 @@ class Lidar(Sprite):
         
         return lines
 
-    def logic(self, tilemap):
+    def logic(self, tilemap, spritelist, name):
         lines = self.get_lidar_lines_around_point(self.screen, False)
-        collisions = check_collisions_between_tilemap_and_lines(self.screen, tilemap, lines)
+        collisions = find_lidar_collisions(tilemap, spritelist, lines, name)
         msg = LaserScan()
         msg.angle_increment = self.angle_increment
         msg.angle_max = self.angle_max
