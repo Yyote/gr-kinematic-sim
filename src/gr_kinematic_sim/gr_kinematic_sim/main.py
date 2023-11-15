@@ -57,7 +57,7 @@ def main():
 
     factory = RobotFactory(node, gmap, screen)
 
-    robot1 = factory.create_ackerman_with_lidar(200, 200)
+    robot1 = factory.create_tracked_with_lidar(200, 200)
     robot2 = factory.create_tracked_with_lidar(200, 300)
     robot3 = factory.create_omni_with_lidar(200, 400)
 
@@ -91,7 +91,7 @@ def main():
         clock.tick(tick_rate)
         
         # if counter % ck == 0:
-        rclpy.spin_once(node)
+        rclpy.spin_once(node, timeout_sec=1 / (2 * tick_rate))
         counter += 1
     
 
