@@ -86,7 +86,7 @@ class Robot(PhysicalObject):
         orientation = copy(self._current_rotation)
         if orientation > 180:
             orientation - 360
-        print(f"self._current_rotation: {orientation}")
+        # print(f"self._current_rotation: {orientation}")
         pose_msg.pose.orientation = angles.setRPY_of_quaternion(0, 0, orientation * math.pi / 180)
         self.pose_pub.publish(pose_msg)
         
@@ -169,7 +169,7 @@ class AckermanRobot(Robot):
         acw = msg.twist.angular.z ** 2 * self.min_rotation_radius
         
         if acw > acv:
-            msg.twist.angular.z = acv / self.min_rotation_radius
+            msg.twist.angular.z = abs(acv / self.min_rotation_radius) ** 0.5 * sgn_wo_zero(msg.twist.angular.z)
         
         self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
     
@@ -198,6 +198,7 @@ class OmniRobot(Robot):
         super().__init__(node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size=image_size, dynamic_model=False)
         self.cmd_vel_sub = self.node.create_subscription(TwistStamped, f"{name}/cmd_vel", self.cmd_vel_cb, 10)
         self.linear_max = 1
+        self.ang_max = math.pi
     
     def cmd_vel_cb(self, msg):
         # msg = TwistStamped()
@@ -210,10 +211,12 @@ class OmniRobot(Robot):
             vx = math.cos(alpha) * self.linear_max
             vy = math.sin(alpha) * self.linear_max
             
-        print(f"self.linear_max: {self.linear_max}")
-        print(f"vx: {vx}")
-        print(f"vy: {vy}")
-        print(f"vx ** 2 + vy ** 2: {vx ** 2 + vy ** 2}")
+        if abs(msg.twist.angular.z) > self.ang_max:
+            msg.twist.angular.z = self.ang_max * sgn_wo_zero(msg.twist.angular.z)
+        # print(f"self.linear_max: {self.linear_max}")
+        # print(f"vx: {vx}")
+        # print(f"vy: {vy}")
+        # print(f"vx ** 2 + vy ** 2: {vx ** 2 + vy ** 2}")
 
         self.set_local_velocity(vx * WORLD_SCALE / tick_rate, vy * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
     
@@ -244,7 +247,6 @@ class TrackedRobot(Robot):
 
             if abs(msg.twist.angular.z) > self.ang_max:
                 msg.twist.angular.z = self.ang_max * sgn_wo_zero(msg.twist.angular.z)
-            print(msg)
             self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
     
     def set_local_velocity(self, vel, ang_vel):
