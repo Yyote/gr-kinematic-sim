@@ -137,6 +137,9 @@ class Robot(PhysicalObject):
             odom_msg.twist = twist_wc
             self.odom_pub.publish(odom_msg)
         self.previous_pose = pose_msg
+        # self.lin_vel_x = 0.0
+        # self.lin_vel_y = 0.0
+        self.ang_vel = 0.0
 
     
     def set_sensors(self, sensors=[]):
