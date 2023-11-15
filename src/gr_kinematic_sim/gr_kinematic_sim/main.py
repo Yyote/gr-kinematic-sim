@@ -58,18 +58,14 @@ def main():
     factory = RobotFactory(node, gmap, screen)
 
     robot1 = factory.create_tracked_with_lidar(200, 200)
-    robot2 = factory.create_tracked_with_lidar(200, 300)
-    robot3 = factory.create_omni_with_lidar(200, 400)
-    robot4 = factory.create_omni_with_lidar(200, 500)
-    robot5 = factory.create_omni_with_lidar(200, 600)
+    robot5 = factory.create_omni_with_lidar(100, 200)
+    robot6 = factory.create_ackerman_with_lidar(200, 100)
 
 
 
     all_sprites.append(robot1)
-    all_sprites.append(robot2)
-    all_sprites.append(robot3)
-    all_sprites.append(robot4)
     all_sprites.append(robot5)
+    all_sprites.append(robot6)
 
     running = True
     while running:
