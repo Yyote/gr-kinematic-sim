@@ -50,7 +50,7 @@ class Lidar(Sprite):
 
     def logic(self, tilemap, spritelist, name):
         lines = self.get_lidar_lines_around_point(self.screen, False)
-        collisions = find_lidar_collisions(tilemap, spritelist, lines, name)
+        collisions = find_lidar_collisions(tilemap, spritelist, lines, name, self.range_max * WORLD_SCALE)
         map_collisions = collisions
         msg = LaserScan()
         msg.angle_increment = self.angle_increment

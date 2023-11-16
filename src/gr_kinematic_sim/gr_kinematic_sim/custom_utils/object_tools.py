@@ -237,7 +237,8 @@ class FoggedMap(TiledMap):
         for layer in self.gameMap.visible_layers:
             if isinstance(layer, pytmx.TiledTileLayer):
                 for x, y, gid in layer:
-                    tile = self.gameMap.get_tile_image_by_gid(2)
+                    obstacle_gid = 6
+                    tile = self.gameMap.get_tile_image_by_gid(obstacle_gid)
                     if gid == 1:
                         self.collider_list.append(pygame.Rect(x * self.gameMap.tilewidth, y * self.gameMap.tileheight, self.gameMap.tilewidth, self.gameMap.tileheight))
                     if tile:
@@ -246,7 +247,7 @@ class FoggedMap(TiledMap):
                         if x not in self.map_dict:
                             self.map_dict[x] = {}
                         if y not in self.map_dict[x]:
-                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=2, real_gid=gid, collider_rect=crect)
+                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=obstacle_gid, real_gid=gid, collider_rect=crect)
 
     def unfog_map(self, points, pos, line_length_pxls):
         if self.counter % 10 != 0:
