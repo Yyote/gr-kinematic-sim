@@ -131,9 +131,9 @@ def handle_offset_change(offset_x, offset_y):
 
 
 def draw_every_sprite_in_list(list_, offset_x, offset_y):
-    for sprite in list_:
-        sprite.update_offset(offset_x, offset_y)
-        sprite.draw(offset_x, offset_y)
+    for i in range(len(list_)):
+        list_[i].update_offset(offset_x, offset_y)
+        list_[i].draw(offset_x, offset_y)
         
 
 def scroll_screen_with_mouse(screen_width, screen_height, offset_x, offset_y):

@@ -1,16 +1,40 @@
 from gr_kinematic_sim.custom_utils.mathtools import make_non_zero, limit
 import math as m
+import numpy as np
 
+def get_distance_between_rect_centers(rect1, rect2):
+    c1 = np.array(rect1.center)
+    c2 = np.array(rect2.center)
+    
+    dc = c2 - c1
+    print(dc)
+    dc ** 2
+    print(dc)
+    dc = dc.sum() ** 0.5
+    print(dc)
+    return dc
+
+def rects_in_distance(rect1, rect2, distance):
+    return get_distance_between_rect_centers(rect1, rect2) < distance
 
 def check_dynamic_collisions_between_tilemap_and_spritelist(tilemap, spritelist):
-    for i in range(len(tilemap.collider_list)):
-        for j in range(len(spritelist)):
-            if spritelist[j].rect.colliderect(tilemap.collider_list[i]):
+    for j in range(len(spritelist)):
+        local_colliders = []
+        start_x1 = spritelist[j].rect.centerx
+        start_y1 = spritelist[j].rect.centery
+        # Фильтрация препятствий по расстоянию до спрайта
+        for i in range(len(tilemap.collider_list)):
+            dr = ((start_x1 - tilemap.collider_list[i].centerx) ** 2 + (start_y1 - tilemap.collider_list[i].centery) ** 2) ** 0.5
+            if dr < spritelist[j].rect.width * 2 ** 0.5:
+                local_colliders.append(tilemap.collider_list[i])
+            
+        for i in range(len(local_colliders)):
+            if spritelist[j].rect.colliderect(local_colliders[i]):
                 spritelist[j].lin_accel_x = 0
                 spritelist[j].lin_accel_y = 0
                 
-                dx = spritelist[j].rect.x - tilemap.collider_list[i].x
-                dy = spritelist[j].rect.y - tilemap.collider_list[i].y
+                dx = spritelist[j].rect.x - local_colliders[i].x
+                dy = spritelist[j].rect.y - local_colliders[i].y
                 
                 
                 spritelist[j].apply_force_now(limit(8 / (make_non_zero(dx)), 3), limit(8 / (make_non_zero(dy)), 3))
@@ -22,14 +46,14 @@ def check_dynamic_collisions_between_tilemap_and_spritelist(tilemap, spritelist)
 def check_kinematic_collision_between_tilemap_and_rect(tilemap, rect):
     for i in range(len(tilemap.collider_list)):
         if rect.colliderect(tilemap.collider_list[i]):
-            return True
-    return False
+            return (True, tilemap.collider_list[i])
+    return (False, None)
 
 def check_kinematic_collision_between_spritelis_and_rect(spritelist, sprite):
     for i in range(len(spritelist)):
         if sprite.rect.colliderect(spritelist[i].rect) and spritelist[i].name != sprite.name:
-            return True
-    return False
+            return (True, spritelist[i].rect)
+    return (False, None)
 
 
 def check_collisions_in_spritelist(spritelist):
