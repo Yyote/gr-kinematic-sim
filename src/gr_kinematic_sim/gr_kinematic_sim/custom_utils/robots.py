@@ -60,6 +60,7 @@ class Robot(PhysicalObject):
         for sensor in self.sensors:
             sensor.update_offset(self.curr_offset_x, self.curr_offset_y)
             sensor.set_center_position(self.rect.x + self.rect.width / 2, self.rect.y + self.rect.height / 2, self._current_rotation)
+            # sensor.update_offset(self.curr_offset_x, self.curr_offset_y)/
             sensor.draw()
             sensor.logic(self.tilemap, self.robot_factory.spritelist, self.name)
     
