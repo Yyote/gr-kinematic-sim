@@ -51,6 +51,7 @@ class Lidar(Sprite):
     def logic(self, tilemap, spritelist, name):
         lines = self.get_lidar_lines_around_point(self.screen, False)
         collisions = find_lidar_collisions(tilemap, spritelist, lines, name)
+        map_collisions = collisions
         msg = LaserScan()
         msg.angle_increment = self.angle_increment
         msg.angle_max = self.angle_max
@@ -71,21 +72,27 @@ class Lidar(Sprite):
                 x2 = collisions[-i][0]
                 y2 = collisions[-i][1]
                 
-                if x2 is not float('inf'):
+                if not m.isinf(x2):
                     dr = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5 
                     msg.ranges.append(dr / WORLD_SCALE)
-                else:
+                if m.isinf(x2):
                     msg.ranges.append(float('inf'))
+                    x2 = m.cos(-i * msg.angle_increment - (self._current_rotation * m.pi / 180) + m.pi / 2) * msg.range_max * WORLD_SCALE + self.rect.centerx
+                    y2 = m.sin(-i * msg.angle_increment - (self._current_rotation * m.pi / 180) + m.pi / 2) * msg.range_max * WORLD_SCALE + self.rect.centery
+                    map_collisions[-i] = (x2, y2)
         
-        for i in range(len(collisions)):
-            if collisions[-i] is not None:
-                x1 = self.rect.centerx
-                y1 = self.rect.centery
-                x2 = collisions[-i][0]
-                y2 = collisions[-i][1]
+        tilemap.unfog_map(map_collisions, self.rect.center, msg.range_max * WORLD_SCALE)
+
+        
+        # for i in range(len(collisions)):
+        #     if collisions[-i] is not None:
+        #         x1 = self.rect.centerx
+        #         y1 = self.rect.centery
+        #         x2 = collisions[-i][0]
+        #         y2 = collisions[-i][1]
                 
-                p = (x2 + self.curr_offset_x, y2 + self.curr_offset_y)
-                pg.draw.circle(self.screen, (255, 0, 0), p, 3, 3)
+        #         p = (x2 + self.curr_offset_x, y2 + self.curr_offset_y)
+        #         pg.draw.circle(self.screen, (255, 0, 0), p, 3, 3)
         self.pub.publish(msg)
         return collisions
     

@@ -8,7 +8,7 @@ from geometry_msgs.msg import TwistStamped, Twist
 from ament_index_python.packages import get_package_share_directory
 from gr_kinematic_sim.custom_utils.sensors import Lidar, LidarB1
 from gr_kinematic_sim.custom_utils.collisions import check_dynamic_collisions_between_tilemap_and_spritelist, check_collisions_in_spritelist, check_collisions_between_tilemap_and_lines
-from gr_kinematic_sim.custom_utils.object_tools import Sprite, TiledMap, PhysicalObject
+from gr_kinematic_sim.custom_utils.object_tools import Sprite, FoggedMap, PhysicalObject
 from gr_kinematic_sim.custom_utils.robots import Robot, AckermanRobot, RobotFactory
 
 from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity, handle_keypresses_through_velocity_omni
@@ -37,7 +37,7 @@ def main():
     screen = pg.display.set_mode((1, 1))
 
     clock = pg.time.Clock()
-    gmap = TiledMap(f'{pkg_dir}gr_kinematic_sim/maps/map_test.tmx')
+    gmap = FoggedMap(f'{pkg_dir}gr_kinematic_sim/maps/map_test.tmx')
     map_img = gmap.make_map()
     map_rect = map_img.get_rect()
 
@@ -58,12 +58,14 @@ def main():
     factory = RobotFactory(node, gmap, screen)
 
     robot1 = factory.create_tracked_with_lidar(200, 200)
+    robot2 = factory.create_tracked_with_lidar(100, 150)
     robot5 = factory.create_omni_with_lidar(100, 200)
     robot6 = factory.create_ackerman_with_lidar(200, 100)
 
 
 
     all_sprites.append(robot1)
+    all_sprites.append(robot2)
     all_sprites.append(robot5)
     all_sprites.append(robot6)
 
@@ -73,7 +75,8 @@ def main():
         global_offset_x, global_offset_y = scroll_screen_with_mouse(width, height, global_offset_x, global_offset_y)
         
         screen.fill((0,0,0))
-        screen.blit(map_img, (0 + global_offset_x, 0 + global_offset_y))
+        gmap.update_counter(counter)
+        gmap.render(screen=screen, offset_x=global_offset_x, offset_y=global_offset_y)
         
         for event in pg.event.get():
             if event.type == pg.QUIT:

@@ -167,6 +167,16 @@ class PhysicalObject(Sprite):
 
 
 
+class TileObj:
+    def __init__(self, x, y, gid, real_gid, collider_rect):
+        self.x = x
+        self.y = y
+        self.gid = gid
+        self.real_gid = real_gid
+        self.rect = collider_rect
+    
+    def reveal(self):
+        self.gid = self.real_gid
 
 
 class TiledMap():
@@ -175,9 +185,10 @@ class TiledMap():
         self.mapwidth = self.gameMap.tilewidth * self.gameMap.width
         self.mapheight = self.gameMap.tileheight * self.gameMap.height
         self.collider_list = []
+        self.map_dict = {}
 
 
-    def _render(self, surface):
+    def _render(self, screen):
         for layer in self.gameMap.visible_layers:
             if isinstance(layer, pytmx.TiledTileLayer):
                 for x, y, gid in layer:
@@ -185,7 +196,12 @@ class TiledMap():
                     if gid == 1:
                         self.collider_list.append(pygame.Rect(x * self.gameMap.tilewidth, y * self.gameMap.tileheight, self.gameMap.tilewidth, self.gameMap.tileheight))
                     if tile:
-                        surface.blit(tile, (x * self.gameMap.tilewidth, y * self.gameMap.tileheight))
+                        screen.blit(tile, (x * self.gameMap.tilewidth, y * self.gameMap.tileheight))
+                        crect = pygame.Rect(x * self.gameMap.tilewidth, y * self.gameMap.tileheight, self.gameMap.tilewidth, self.gameMap.tileheight)
+                        if x not in self.map_dict:
+                            self.map_dict[x] = {}
+                        if y not in self.map_dict[x]:
+                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=gid, real_gid=gid, collider_rect=crect)
 
 
     def make_map(self):
@@ -199,3 +215,65 @@ class TiledMap():
         self.mapSurface = pygame.Surface((self.mapwidth, self.mapheight))
         self._render(self.mapSurface)
         return self.mapSurface
+
+
+class FoggedMap(TiledMap):
+    def __init__(self, map_path):
+        super().__init__(map_path=map_path)
+        self.counter = 0
+        
+    def update_counter(self, c):
+        self.counter = c
+        
+    def render(self, screen, offset_x, offset_y):
+        for x in range(self.gameMap.width):
+            for y in range(self.gameMap.height):
+                tile_obj = self.map_dict[x][y]
+                tile = self.gameMap.get_tile_image_by_gid(tile_obj.gid)
+                if tile:
+                    screen.blit(tile, (x * self.gameMap.tilewidth + offset_x, y * self.gameMap.tileheight + offset_y))
+    
+    def _render(self, screen):
+        for layer in self.gameMap.visible_layers:
+            if isinstance(layer, pytmx.TiledTileLayer):
+                for x, y, gid in layer:
+                    tile = self.gameMap.get_tile_image_by_gid(2)
+                    if gid == 1:
+                        self.collider_list.append(pygame.Rect(x * self.gameMap.tilewidth, y * self.gameMap.tileheight, self.gameMap.tilewidth, self.gameMap.tileheight))
+                    if tile:
+                        screen.blit(tile, (x * self.gameMap.tilewidth, y * self.gameMap.tileheight))
+                        crect = pygame.Rect(x * self.gameMap.tilewidth, y * self.gameMap.tileheight, self.gameMap.tilewidth, self.gameMap.tileheight)
+                        if x not in self.map_dict:
+                            self.map_dict[x] = {}
+                        if y not in self.map_dict[x]:
+                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=2, real_gid=gid, collider_rect=crect)
+
+    def unfog_map(self, points, pos, line_length_pxls):
+        if self.counter % 10 != 0:
+            return
+        x0 = pos[0]
+        y0 = pos[1]
+        
+        local_tiles = []
+        for x in range(self.gameMap.width):
+            for y in range(self.gameMap.height):
+                dr = ((x * self.gameMap.tilewidth - x0) ** 2 + (y * self.gameMap.tileheight - y0) ** 2) ** 0.5
+                if dr < line_length_pxls:
+                    local_tiles.append((x,y))
+        
+        for i in range(len(points)):
+            x1 = points[i][0]
+            y1 = points[i][1]
+            line = ((x0, y0), (x1, y1))
+            for j in range(len(local_tiles)):
+                if self.map_dict[local_tiles[j][0]][local_tiles[j][1]].rect.clipline(line):
+                    self.map_dict[local_tiles[j][0]][local_tiles[j][1]].reveal()
+        
+        # for i in range(len(points)):
+        #     x1 = points[i][0]
+        #     y1 = points[i][1]
+        #     line = ((x0, y0), (x1, y1))
+        #     for x in range(self.gameMap.width):
+        #         for y in range(self.gameMap.height):
+        #             if self.map_dict[x][y].rect.clipline(line):
+        #                 self.map_dict[x][y].reveal()
