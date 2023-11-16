@@ -12,7 +12,7 @@ from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import PoseStamped, TwistStamped, Twist, PoseWithCovariance, TwistWithCovariance
 from nav_msgs.msg import Odometry
 
-from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix, EulerAngles
+from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix, EulerAngles, limit, make_non_zero
 from gr_kinematic_sim.custom_utils.collisions import check_kinematic_collision_between_tilemap_and_rect, check_kinematic_collision_between_spritelis_and_rect
 from gr_kinematic_sim.custom_utils.gametools import tick_rate
 
@@ -88,8 +88,15 @@ class PhysicalObject(Sprite):
         self.robot_factory = robot_factory
     
     def kinematic_collision_check(self, sprite):
-        return check_kinematic_collision_between_tilemap_and_rect(self.tilemap, sprite.rect) or check_kinematic_collision_between_spritelis_and_rect(self.robot_factory.spritelist, sprite)
-    
+        tilemap_collided, tile_collider = check_kinematic_collision_between_tilemap_and_rect(self.tilemap, sprite.rect)
+        spritelist_collided, sprite_collider = check_kinematic_collision_between_spritelis_and_rect(self.robot_factory.spritelist, sprite)
+        
+        if tilemap_collided:
+            return (True, tile_collider)
+        if spritelist_collided:
+            return (True, sprite_collider)
+        return (False, None)
+        
     def apply_force_now(self, lin_force_x, lin_force_y, ang_force=0):
         if self.dynamic_model == False:
             raise Exception('Dynamic modeling is turned off for this model, so this function should not be called. Please, check your code')
@@ -150,9 +157,12 @@ class PhysicalObject(Sprite):
         copied_rect.y += self.lin_vel_y
         copied_sprite = copy(self)
         copied_sprite.rect = copied_rect
-        if not self.dynamic_model and self.kinematic_collision_check(copied_sprite):
-            self.lin_vel_x = 0
-            self.lin_vel_y = 0
+        kinematic_collision, collide_rect = self.kinematic_collision_check(copied_sprite)
+        if not self.dynamic_model and kinematic_collision:
+            dx = -self.rect.centerx + collide_rect.centerx
+            dy = -self.rect.centery + collide_rect.centery
+            self.lin_vel_x = -   limit(10 / (make_non_zero(dx)), 3)
+            self.lin_vel_y = - limit(10 / (make_non_zero(dy)), 3)
             self.ang_vel = 0
         self.rect.x += self.lin_vel_x
         self.rect.y += self.lin_vel_y
@@ -237,7 +247,8 @@ class FoggedMap(TiledMap):
         for layer in self.gameMap.visible_layers:
             if isinstance(layer, pytmx.TiledTileLayer):
                 for x, y, gid in layer:
-                    tile = self.gameMap.get_tile_image_by_gid(2)
+                    obstacle_gid = 6
+                    tile = self.gameMap.get_tile_image_by_gid(obstacle_gid)
                     if gid == 1:
                         self.collider_list.append(pygame.Rect(x * self.gameMap.tilewidth, y * self.gameMap.tileheight, self.gameMap.tilewidth, self.gameMap.tileheight))
                     if tile:
@@ -246,7 +257,7 @@ class FoggedMap(TiledMap):
                         if x not in self.map_dict:
                             self.map_dict[x] = {}
                         if y not in self.map_dict[x]:
-                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=2, real_gid=gid, collider_rect=crect)
+                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=obstacle_gid, real_gid=gid, collider_rect=crect)
 
     def unfog_map(self, points, pos, line_length_pxls):
         if self.counter % 10 != 0:
