@@ -55,7 +55,8 @@ class Robot(PhysicalObject):
         self.lidar_transform_broadcaster.sendTransform(self.lidar_transform)
 
     def scan_cb(self, scan):
-        resolution = 0.17578125
+        resolution = 0.25
+        # resolution = 0.17578125
         mp = OccupancyGrid()
         
         mp.header.frame_id = f"{self.name}/base_link"
@@ -79,20 +80,20 @@ class Robot(PhysicalObject):
         # occs[1] = 100
         # occs[3] = 100
         
-        # for i in range(len(scan.ranges)):
-        #     angle = i * scan.angle_increment
-        #     x = scan.ranges[i] * math.cos(angle + math.pi)
-        #     y = scan.ranges[i] * math.sin(angle + math.pi)
+        for i in range(len(scan.ranges)):
+            angle = i * scan.angle_increment
+            x = scan.ranges[i] * math.cos(angle + math.pi)
+            y = scan.ranges[i] * math.sin(angle + math.pi)
             
-        #     if math.isfinite(scan.ranges[i]):
-        #         arg_x = int((x - mp.info.origin.position.x) / mp.info.resolution)
-        #         arg_y = int((y - mp.info.origin.position.y) / mp.info.resolution)
-        #         print(arg_x * mp.info.height + arg_y)
-        #         occs[int(arg_x + arg_y * mp.info.width)] = 100    
+            if (x < (mp.info.width / 2) * mp.info.resolution and x > -(mp.info.width / 2) * mp.info.resolution) and (y < (mp.info.height / 2) * mp.info.resolution and y > -(mp.info.height / 2) * mp.info.resolution) and math.isfinite(scan.ranges[i]):
+                arg_x = int((x - mp.info.origin.position.x) / mp.info.resolution)
+                arg_y = int((y - mp.info.origin.position.y) / mp.info.resolution)
+                print(arg_x * mp.info.height + arg_y)
+                occs[int(arg_x + arg_y * mp.info.width)] = 100    
                 
         
-        # mp.data = occs.tolist()
-        # self.local_map_pub.publish(mp)
+        mp.data = occs.tolist()
+        self.local_map_pub.publish(mp)
     
     def call_sensors(self):
         for sensor in self.sensors:
