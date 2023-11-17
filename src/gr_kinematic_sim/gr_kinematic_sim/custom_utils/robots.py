@@ -1,14 +1,16 @@
 import pygame as pg
 import pytmx
 import math
+import numpy as np
 import rclpy
 from copy import copy
 
 from rclpy.duration import Duration
 from rclpy.time import Time
 
-from geometry_msgs.msg import PoseStamped, TwistStamped, Twist, PoseWithCovariance, TwistWithCovariance
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped, TwistStamped, Twist, PoseWithCovariance, TwistWithCovariance, Pose
+from sensor_msgs.msg import LaserScan
+from nav_msgs.msg import Odometry, OccupancyGrid
 from tf2_ros.transform_broadcaster import TransformBroadcaster, TransformStamped
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
@@ -30,6 +32,8 @@ class Robot(PhysicalObject):
         # self.node = rclpy.node.Node()
         self.pose_pub = self.node.create_publisher(PoseStamped, f"{name}/pose", 10)
         self.odom_pub = self.node.create_publisher(Odometry, f"{name}/odom", 10)
+        self.local_map_pub = self.node.create_publisher(OccupancyGrid, f"{name}/local_map", 10)
+        self.scan_sub = self.node.create_subscription(LaserScan, f"/{name}/scan", self.scan_cb, 10)
         self.transform_broadcaster = TransformBroadcaster(self.node)
         self.lidar_transform_broadcaster = StaticTransformBroadcaster(self.node)
         self.previous_pose = None
@@ -50,11 +54,45 @@ class Robot(PhysicalObject):
         self.lidar_transform.transform.rotation.w = 1.0
         self.lidar_transform_broadcaster.sendTransform(self.lidar_transform)
 
-    
-    # def cmd_vel_cb(self, msg):
-    #     # msg = TwistStamped()
-    #     # msg.twist = Twist()
-    #     self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, msg.twist.linear.y * WORLD_SCALE / tick_rate, msg.twist.angular.z * WORLD_SCALE / tick_rate)
+    def scan_cb(self, scan):
+        resolution = 0.17578125
+        mp = OccupancyGrid()
+        
+        mp.header.frame_id = f"{self.name}/base_link"
+        mp.header.stamp = self.node.get_clock().now().to_msg()
+        
+        mp.info.map_load_time = self.node.get_clock().now().to_msg()
+        mp.info.resolution = resolution
+        mp.info.width = 16
+        mp.info.height = 16
+        
+        origin = Pose()
+        origin.position.x = 0 - resolution * mp.info.width / 2
+        origin.position.y = 0 - resolution * mp.info.height / 2
+        origin.position.z = 0.0
+        
+        # origin.orientation = self.previous_pose.pose.orientation
+        
+        mp.info.origin = origin
+        
+        occs = np.zeros((mp.info.width * mp.info.height), int)
+        # occs[1] = 100
+        # occs[3] = 100
+        
+        # for i in range(len(scan.ranges)):
+        #     angle = i * scan.angle_increment
+        #     x = scan.ranges[i] * math.cos(angle + math.pi)
+        #     y = scan.ranges[i] * math.sin(angle + math.pi)
+            
+        #     if math.isfinite(scan.ranges[i]):
+        #         arg_x = int((x - mp.info.origin.position.x) / mp.info.resolution)
+        #         arg_y = int((y - mp.info.origin.position.y) / mp.info.resolution)
+        #         print(arg_x * mp.info.height + arg_y)
+        #         occs[int(arg_x + arg_y * mp.info.width)] = 100    
+                
+        
+        # mp.data = occs.tolist()
+        # self.local_map_pub.publish(mp)
     
     def call_sensors(self):
         for sensor in self.sensors:
