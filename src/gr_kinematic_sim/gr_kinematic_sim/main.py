@@ -91,6 +91,7 @@ def main():
         draw_every_sprite_in_list(all_sprites, global_offset_x, global_offset_y)
         # check_dynamic_collisions_between_tilemap_and_spritelist(gmap, spritelist=all_sprites)
         
+        gmap.gameMap_to_OpenCv()
         
         pg.display.update()
         clock.tick(tick_rate)

@@ -2,6 +2,8 @@ import pygame
 import pytmx
 import math
 import rclpy
+import cv2
+import numpy as np
 from copy import copy
 
 from rclpy.duration import Duration
@@ -280,11 +282,26 @@ class FoggedMap(TiledMap):
                 if self.map_dict[local_tiles[j][0]][local_tiles[j][1]].rect.clipline(line):
                     self.map_dict[local_tiles[j][0]][local_tiles[j][1]].reveal()
         
-        # for i in range(len(points)):
-        #     x1 = points[i][0]
-        #     y1 = points[i][1]
-        #     line = ((x0, y0), (x1, y1))
-        #     for x in range(self.gameMap.width):
-        #         for y in range(self.gameMap.height):
-        #             if self.map_dict[x][y].rect.clipline(line):
-        #                 self.map_dict[x][y].reveal()
+    def gameMap_to_OpenCv(self):
+        img = np.ones(( self.gameMap.height, self.gameMap.width, 3), np.uint8)* 255
+        for j in range(self.gameMap.width):
+            for i in range(self.gameMap.height):
+                #def switch(index):
+                    #if index == 1:
+                        #colour = red    
+                colour = [0, 0, 0]
+                if self.map_dict[j][i].gid == 1:
+                    colour = [0,0,0]
+                elif self.map_dict[j][i].gid == 2:
+                    colour = [255,255,255]
+                elif self.map_dict[j][i].gid == 3:
+                    colour = [100,100,230] #red
+                elif self.map_dict[j][i].gid == 4:
+                    colour = [122,237,155] #green
+                elif self.map_dict[j][i].gid == 5:
+                    colour = [245,143,230] #purple
+                else:
+                    colour = [95,95,47] #Gray (Vlados colour)
+                img[i][j] = colour    
+        cv2.imwrite ("Image.png", img)
+        return img

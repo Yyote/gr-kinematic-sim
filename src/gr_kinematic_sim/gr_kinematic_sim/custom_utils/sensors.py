@@ -18,7 +18,7 @@ class Lidar(Sprite):
         self.num_rays = num_rays
         self.ray_length_px = ray_length_px
         self.node = node
-        self.pub = node.create_publisher(LaserScan, f"{robot_name}/scan", 10)
+        self.lidar_pub = node.create_publisher(LaserScan, f"{robot_name}/scan", 10)
         self.robot_name = robot_name
         
         self.angle_min = - m.pi
@@ -83,17 +83,7 @@ class Lidar(Sprite):
         
         tilemap.unfog_map(map_collisions, self.rect.center, msg.range_max * WORLD_SCALE)
 
-        
-        # for i in range(len(collisions)):
-        #     if collisions[-i] is not None:
-        #         x1 = self.rect.centerx
-        #         y1 = self.rect.centery
-        #         x2 = collisions[-i][0]
-        #         y2 = collisions[-i][1]
-                
-        #         p = (x2 + self.curr_offset_x, y2 + self.curr_offset_y)
-        #         pg.draw.circle(self.screen, (255, 0, 0), p, 3, 3)
-        self.pub.publish(msg)
+        self.lidar_pub.publish(msg)
         return collisions
     
     def set_center_position(self, center_x, center_y, rotation_deg):
