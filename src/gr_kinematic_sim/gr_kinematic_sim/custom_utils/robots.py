@@ -88,7 +88,7 @@ class Robot(PhysicalObject):
             if (x < (mp.info.width / 2) * mp.info.resolution and x > -(mp.info.width / 2) * mp.info.resolution) and (y < (mp.info.height / 2) * mp.info.resolution and y > -(mp.info.height / 2) * mp.info.resolution) and math.isfinite(scan.ranges[i]):
                 arg_x = int((x - mp.info.origin.position.x) / mp.info.resolution)
                 arg_y = int((y - mp.info.origin.position.y) / mp.info.resolution)
-                print(arg_x * mp.info.height + arg_y)
+                # print(arg_x * mp.info.height + arg_y)
                 occs[int(arg_x + arg_y * mp.info.width)] = 100    
                 
         
@@ -181,7 +181,7 @@ class Robot(PhysicalObject):
         self.previous_pose = pose_msg
         # self.lin_vel_x = 0.0
         # self.lin_vel_y = 0.0
-        self.ang_vel = 0.0
+        # self.ang_vel = 0.0
 
     
     def set_sensors(self, sensors=[]):
@@ -238,7 +238,7 @@ class OmniRobot(Robot):
         super().__init__(node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size=image_size, dynamic_model=False)
         self.cmd_vel_sub = self.node.create_subscription(TwistStamped, f"{name}/cmd_vel", self.cmd_vel_cb, 10)
         self.linear_max = 1
-        self.ang_max = math.pi
+        self.ang_max = math.pi / 2
     
     def cmd_vel_cb(self, msg):
         # msg = TwistStamped()
@@ -278,7 +278,7 @@ class TrackedRobot(Robot):
         super().__init__(node, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier, image_size=image_size, dynamic_model=False)
         self.cmd_vel_sub = self.node.create_subscription(TwistStamped, f"{name}/cmd_vel", self.cmd_vel_cb, 10)
         self.linear_max = 1.0
-        self.ang_max = math.pi 
+        self.ang_max = math.pi / 2
 
     def cmd_vel_cb(self, msg):
         if (msg != Twist()):
