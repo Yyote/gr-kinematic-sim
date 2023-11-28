@@ -7,11 +7,11 @@ def get_distance_between_rect_centers(rect1, rect2):
     c2 = np.array(rect2.center)
     
     dc = c2 - c1
-    print(dc)
+    # print(dc)
     dc ** 2
-    print(dc)
+    # print(dc)
     dc = dc.sum() ** 0.5
-    print(dc)
+    # print(dc)
     return dc
 
 def rects_in_distance(rect1, rect2, distance):

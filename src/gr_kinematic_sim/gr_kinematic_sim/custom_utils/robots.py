@@ -88,7 +88,7 @@ class Robot(PhysicalObject):
             if (x < (mp.info.width / 2) * mp.info.resolution and x > -(mp.info.width / 2) * mp.info.resolution) and (y < (mp.info.height / 2) * mp.info.resolution and y > -(mp.info.height / 2) * mp.info.resolution) and math.isfinite(scan.ranges[i]):
                 arg_x = int((x - mp.info.origin.position.x) / mp.info.resolution)
                 arg_y = int((y - mp.info.origin.position.y) / mp.info.resolution)
-                print(arg_x * mp.info.height + arg_y)
+                # print(arg_x * mp.info.height + arg_y)
                 occs[int(arg_x + arg_y * mp.info.width)] = 100    
                 
         
