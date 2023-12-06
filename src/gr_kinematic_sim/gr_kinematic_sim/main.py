@@ -37,7 +37,7 @@ def main():
     screen = pg.display.set_mode((1, 1))
 
     clock = pg.time.Clock()
-    gmap = FoggedMap(f'{pkg_dir}gr_kinematic_sim/maps/map_test.tmx')
+    gmap = FoggedMap(f'{pkg_dir}gr_kinematic_sim/maps/map_test.tmx', node)
     map_img = gmap.make_map()
     map_rect = map_img.get_rect()
 
@@ -92,7 +92,9 @@ def main():
         # check_dynamic_collisions_between_tilemap_and_spritelist(gmap, spritelist=all_sprites)
         
         gmap.gameMap_to_OpenCv()
-        
+        ##
+        gmap.OpenCV_to_OccupancyGRID(gmap.gameMap_to_OpenCv())
+        ##
         pg.display.update()
         clock.tick(tick_rate)
         

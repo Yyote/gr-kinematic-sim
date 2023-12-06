@@ -1,6 +1,9 @@
+from email.mime import image
+from errno import EALREADY
 import pygame
 import pytmx
 import math
+
 import rclpy
 import cv2
 import numpy as np
@@ -13,6 +16,8 @@ from ament_index_python.packages import get_package_share_directory
 
 from geometry_msgs.msg import PoseStamped, TwistStamped, Twist, PoseWithCovariance, TwistWithCovariance
 from nav_msgs.msg import Odometry
+from nav_msgs.msg import OccupancyGrid
+from nav_msgs.srv import GetMap
 
 from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix, EulerAngles, limit, make_non_zero
 from gr_kinematic_sim.custom_utils.collisions import check_kinematic_collision_between_tilemap_and_rect, check_kinematic_collision_between_spritelis_and_rect
@@ -192,12 +197,13 @@ class TileObj:
 
 
 class TiledMap():
-    def __init__(self, map_path):
+    def __init__(self, map_path, node):
         self.gameMap = pytmx.load_pygame(map_path, pixelalpha=True)
         self.mapwidth = self.gameMap.tilewidth * self.gameMap.width
         self.mapheight = self.gameMap.tileheight * self.gameMap.height
         self.collider_list = []
         self.map_dict = {}
+        self.node = node
 
 
     def _render(self, screen):
@@ -230,9 +236,10 @@ class TiledMap():
 
 
 class FoggedMap(TiledMap):
-    def __init__(self, map_path):
-        super().__init__(map_path=map_path)
+    def __init__(self, map_path, node):
+        super().__init__(map_path=map_path, node=node)
         self.counter = 0
+        self.publisher = self.node.create_publisher(OccupancyGrid, 'OccupancyGrid_map', 100)
         
     def update_counter(self, c):
         self.counter = c
@@ -283,6 +290,11 @@ class FoggedMap(TiledMap):
                     self.map_dict[local_tiles[j][0]][local_tiles[j][1]].reveal()
         
     def gameMap_to_OpenCv(self):
+        """Это функция из открытых тайлов делает картинку OpenCV
+
+        Returns:
+            img - np.ndarray - карта в формате изображения
+        """
         img = np.ones(( self.gameMap.height, self.gameMap.width, 3), np.uint8)* 255
         for j in range(self.gameMap.width):
             for i in range(self.gameMap.height):
@@ -305,3 +317,46 @@ class FoggedMap(TiledMap):
                 img[i][j] = colour    
         cv2.imwrite ("Image.png", img)
         return img
+    
+    def OpenCV_to_OccupancyGRID(self, img):
+        """Переводит карту в формате изображения в формат OccupancyGrid
+
+        Args:
+            img (np.ndarray): Карта
+
+        Returns:
+            OccupancyGrid 
+        """
+        occupancyG = OccupancyGrid()
+        angle = EulerAngles()
+        prob_vec = [-1 for i in range(self.gameMap.height * self.gameMap.width)]
+        #prob_vec = []
+        occupancyG.header.frame_id = "map"
+        occupancyG.header.stamp = self.node.get_clock().now().to_msg()
+        occupancyG.info.height = self.gameMap.height
+        occupancyG.info.width = self.gameMap.width
+        occupancyG.info.origin.position.x = 0.0
+        occupancyG.info.origin.position.y = 0.0
+        occupancyG.info.origin.position.z = 0.0
+        occupancyG.info.origin.orientation = angle.setRPY_of_quaternion(0, math.pi, math.pi/2)
+        occupancyG.info.resolution = 0.5
+        k = 0
+
+        for j in range(self.gameMap.height):
+            for i in range(self.gameMap.width):
+                if img[j][i][0] == 0: 
+                    prob_vec[k] = 100
+                elif img[j][i][0] == 95: 
+                    prob_vec[k] = -1
+                else:
+                    prob_vec[k] = 0
+                k += 1
+                
+                # if img[j][i][0] == color_template: 
+                #     prob_vec.append(0)
+                # else:
+                #     prob_vec.append(100)
+
+        occupancyG.data = prob_vec
+        self.publisher.publish(occupancyG)
+        return occupancyG
