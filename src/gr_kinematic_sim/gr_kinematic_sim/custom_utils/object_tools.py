@@ -290,6 +290,11 @@ class FoggedMap(TiledMap):
                     self.map_dict[local_tiles[j][0]][local_tiles[j][1]].reveal()
         
     def gameMap_to_OpenCv(self):
+        """Это функция из открытых тайлов делает картинку OpenCV
+
+        Returns:
+            img - np.ndarray - карта в формате изображения
+        """
         img = np.ones(( self.gameMap.height, self.gameMap.width, 3), np.uint8)* 255
         for j in range(self.gameMap.width):
             for i in range(self.gameMap.height):
@@ -314,6 +319,14 @@ class FoggedMap(TiledMap):
         return img
     
     def OpenCV_to_OccupancyGRID(self, img):
+        """Переводит карту в формате изображения в формат OccupancyGrid
+
+        Args:
+            img (np.ndarray): Карта
+
+        Returns:
+            OccupancyGrid 
+        """
         occupancyG = OccupancyGrid()
         angle = EulerAngles()
         prob_vec = [-1 for i in range(self.gameMap.height * self.gameMap.width)]
