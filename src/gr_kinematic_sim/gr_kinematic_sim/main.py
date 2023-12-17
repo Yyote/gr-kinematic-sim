@@ -14,6 +14,9 @@ from gr_kinematic_sim.custom_utils.robots import Robot, AckermanRobot, RobotFact
 from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity, handle_keypresses_through_velocity_omni
 from gr_kinematic_sim.custom_utils.gametools import tick_rate
 
+import faulthandler
+faulthandler.enable()
+
 pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr_kinematic_sim/"
 
 
@@ -34,16 +37,7 @@ def main():
     ck = tick_rate / 10
     
     pg.init()
-    screen = pg.display.set_mode((1, 1))
-
-    clock = pg.time.Clock()
-    gmap = FoggedMap(f'{pkg_dir}gr_kinematic_sim/maps/map_test.tmx', node)
-    map_img = gmap.make_map()
-    map_rect = map_img.get_rect()
-
-    print(f"map_img.height : {map_rect.width}; map_img.width : {map_rect.width}")
-
-
+    # screen = pg.display.set_mode((1, 1))
     width = 1280
     height = 720
 
@@ -53,11 +47,19 @@ def main():
     screen = pg.display.set_mode((width, height))
     pg.display.set_caption('My game')
 
+    clock = pg.time.Clock()
+    gmap = FoggedMap(f'{pkg_dir}gr_kinematic_sim/maps/map_test.tmx', node)
+    map_img = gmap.make_map()
+    map_rect = map_img.get_rect()
+
+
+
+
     all_sprites = []
 
     factory = RobotFactory(node, gmap, screen)
 
-    robot1 = factory.create_tracked_with_lidar(200, 200)
+    robot1 = factory.create_ackerman_with_lidar(200, 200)
     robot2 = factory.create_tracked_with_lidar(100, 150)
     robot5 = factory.create_omni_with_lidar(100, 200)
     robot6 = factory.create_ackerman_with_lidar(200, 100)
