@@ -67,7 +67,10 @@ class Sprite(pygame.sprite.Sprite):
         rect_to_draw = copy(self.rect)
         rect_to_draw.x += self.curr_offset_x
         rect_to_draw.y += self.curr_offset_y
-        self.screen.blit(self.image, rect_to_draw)
+        try:
+            self.screen.blit(pygame.transform.rotozoom(self._original_image, self._current_rotation, 1), rect_to_draw)
+        except Exception as e:
+            print(e)
     
     def update_offset(self, x, y):
         self.curr_offset_x = x

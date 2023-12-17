@@ -72,7 +72,6 @@ def check_kinematic_collision_between_spritelis_and_rect(spritelist, sprite):
 def check_mask_collision_between_spritelis_and_rect(spritelist, sprite):
     for i in range(len(spritelist)):
         if spritelist[i].name != sprite.name:
-            print(f"2.: {sprite.get_mask().overlap(spritelist[i].get_mask(), (spritelist[i].rect.x, spritelist[i].rect.y))}")
             if sprite.get_mask().overlap(spritelist[i].get_mask(), (spritelist[i].rect.x - sprite.rect.x, spritelist[i].rect.y  - sprite.rect.y)):
                 return (True, spritelist[i].rect)
     return (False, None)

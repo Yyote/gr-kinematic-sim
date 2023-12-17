@@ -61,9 +61,9 @@ def handle_keypresses_through_velocity(sprite, node):
     if keys[pg.K_UP]:
         vel += 2
     if keys[pg.K_LEFT]:
-        ang_vel += 159
-    if keys[pg.K_RIGHT]:
         ang_vel -= 159
+    if keys[pg.K_RIGHT]:
+        ang_vel += 159
     if keys[pg.K_DOWN]:
         vel -= 2
 
