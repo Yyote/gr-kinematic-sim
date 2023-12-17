@@ -20,7 +20,7 @@ from nav_msgs.msg import OccupancyGrid
 from nav_msgs.srv import GetMap
 
 from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix, EulerAngles, limit, make_non_zero
-from gr_kinematic_sim.custom_utils.collisions import check_kinematic_collision_between_tilemap_and_rect, check_kinematic_collision_between_spritelis_and_rect
+from gr_kinematic_sim.custom_utils.collisions import check_kinematic_collision_between_tilemap_and_rect, check_kinematic_collision_between_spritelis_and_rect, check_mask_collision_between_spritelis_and_rect, check_mask_collision_between_tilemap_and_sprite
 from gr_kinematic_sim.custom_utils.gametools import tick_rate
 
 
@@ -73,6 +73,16 @@ class Sprite(pygame.sprite.Sprite):
         self.curr_offset_x = x
         self.curr_offset_y = y
     
+    def draw_mask(self):
+        rect_to_draw = copy(self.rect)
+        rect_to_draw.x += self.curr_offset_x
+        rect_to_draw.y += self.curr_offset_y
+        mask = pygame.mask.from_surface(self.image)
+        self.screen.blit(mask.to_surface(), rect_to_draw)
+    
+    def get_mask(self):
+        mask = pygame.mask.from_surface(self.image)
+        return mask
 
 class PhysicalObject(Sprite):
     def __init__(self, name, tilemap, robot_factory, x, y, image, screen, offset_x, offset_y, mass, friction_multiplier=0.95, image_size=DEFAULT_IMAGE_SIZE, dynamic_model=True):
@@ -94,9 +104,11 @@ class PhysicalObject(Sprite):
         self.name = name
         self.robot_factory = robot_factory
     
-    def kinematic_collision_check(self, sprite):
-        tilemap_collided, tile_collider = check_kinematic_collision_between_tilemap_and_rect(self.tilemap, sprite.rect)
-        spritelist_collided, sprite_collider = check_kinematic_collision_between_spritelis_and_rect(self.robot_factory.spritelist, sprite)
+    def kinematic_rect_collision_check(self, sprite):
+        tilemap_collided, tile_collider = check_mask_collision_between_tilemap_and_sprite(self.tilemap, sprite)
+        # spritelist_collided, sprite_collider = check_kinematic_collision_between_spritelis_and_rect(self.robot_factory.spritelist, sprite)
+        
+        spritelist_collided, sprite_collider = check_mask_collision_between_spritelis_and_rect(self.robot_factory.spritelist, sprite)
         
         if tilemap_collided:
             return (True, tile_collider)
@@ -162,14 +174,20 @@ class PhysicalObject(Sprite):
         copied_rect = copy(self.rect)
         copied_rect.x += self.lin_vel_x
         copied_rect.y += self.lin_vel_y
+
         copied_sprite = copy(self)
         copied_sprite.rect = copied_rect
-        kinematic_collision, collide_rect = self.kinematic_collision_check(copied_sprite)
+        copied_sprite.rotate(self.ang_vel)
+        kinematic_collision, collide_rect = self.kinematic_rect_collision_check(copied_sprite)
         if not self.dynamic_model and kinematic_collision:
             dx = -self.rect.centerx + collide_rect.centerx
             dy = -self.rect.centery + collide_rect.centery
-            self.lin_vel_x = -   limit(10 / (make_non_zero(dx)), 3)
-            self.lin_vel_y = - limit(10 / (make_non_zero(dy)), 3)
+            dx = -self.rect.centerx + collide_rect.centerx
+            dy = -self.rect.centery + collide_rect.centery
+            # self.lin_vel_x = - limit(10 / (make_non_zero(dx)), 3)
+            # self.lin_vel_y = - limit(10 / (make_non_zero(dy)), 3)
+            self.lin_vel_x = 0
+            self.lin_vel_y = 0
             self.ang_vel = 0
         self.rect.x += self.lin_vel_x
         self.rect.y += self.lin_vel_y
@@ -185,15 +203,19 @@ class PhysicalObject(Sprite):
 
 
 class TileObj:
-    def __init__(self, x, y, gid, real_gid, collider_rect):
+    def __init__(self, x, y, gid, real_gid, collider_rect, image):
         self.x = x
         self.y = y
         self.gid = gid
         self.real_gid = real_gid
         self.rect = collider_rect
+        self.mask = pygame.mask.from_surface(image)
     
     def reveal(self):
         self.gid = self.real_gid
+    
+    def get_mask(self):
+        return self.mask
 
 
 class TiledMap():
@@ -219,7 +241,7 @@ class TiledMap():
                         if x not in self.map_dict:
                             self.map_dict[x] = {}
                         if y not in self.map_dict[x]:
-                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=gid, real_gid=gid, collider_rect=crect)
+                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=gid, real_gid=gid, collider_rect=crect, image=tile)
 
 
     def make_map(self):
@@ -266,7 +288,7 @@ class FoggedMap(TiledMap):
                         if x not in self.map_dict:
                             self.map_dict[x] = {}
                         if y not in self.map_dict[x]:
-                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=obstacle_gid, real_gid=gid, collider_rect=crect)
+                            self.map_dict[x][y] = TileObj(x=x, y=y, gid=obstacle_gid, real_gid=gid, collider_rect=crect, image=self.gameMap.get_tile_image_by_gid(gid))
 
     def unfog_map(self, points, pos, line_length_pxls):
         if self.counter % 10 != 0:

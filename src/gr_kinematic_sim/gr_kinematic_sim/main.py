@@ -95,6 +95,8 @@ def main():
         ##
         gmap.OpenCV_to_OccupancyGRID(gmap.gameMap_to_OpenCv())
         ##
+        # for roboti in all_sprites:
+        #     roboti.draw_mask()
         pg.display.update()
         clock.tick(tick_rate)
         

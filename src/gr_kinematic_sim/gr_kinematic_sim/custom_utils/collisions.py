@@ -1,6 +1,7 @@
 from gr_kinematic_sim.custom_utils.mathtools import make_non_zero, limit
 import math as m
 import numpy as np
+import pygame as pg
 
 def get_distance_between_rect_centers(rect1, rect2):
     c1 = np.array(rect1.center)
@@ -49,12 +50,32 @@ def check_kinematic_collision_between_tilemap_and_rect(tilemap, rect):
             return (True, tilemap.collider_list[i])
     return (False, None)
 
+
+def check_mask_collision_between_tilemap_and_sprite(tilemap, sprite):
+    for x in range(tilemap.gameMap.width):
+        for y in range(tilemap.gameMap.height):
+            dx = tilemap.map_dict[x][y].rect.x - sprite.rect.x
+            dy = tilemap.map_dict[x][y].rect.y  - sprite.rect.y
+            dr = m.sqrt(dx ** 2 + dy ** 2)
+            if dr < m.sqrt(sprite.rect.height ** 2 + sprite.rect.width ** 2):
+                if sprite.get_mask().overlap(tilemap.map_dict[x][y].get_mask(), (dx, dy)) and tilemap.map_dict[x][y].real_gid == 1:
+                    return (True, tilemap.map_dict[x][y].rect)
+    return (False, None)
+
 def check_kinematic_collision_between_spritelis_and_rect(spritelist, sprite):
     for i in range(len(spritelist)):
         if sprite.rect.colliderect(spritelist[i].rect) and spritelist[i].name != sprite.name:
             return (True, spritelist[i].rect)
     return (False, None)
 
+
+def check_mask_collision_between_spritelis_and_rect(spritelist, sprite):
+    for i in range(len(spritelist)):
+        if spritelist[i].name != sprite.name:
+            print(f"2.: {sprite.get_mask().overlap(spritelist[i].get_mask(), (spritelist[i].rect.x, spritelist[i].rect.y))}")
+            if sprite.get_mask().overlap(spritelist[i].get_mask(), (spritelist[i].rect.x - sprite.rect.x, spritelist[i].rect.y  - sprite.rect.y)):
+                return (True, spritelist[i].rect)
+    return (False, None)
 
 def check_collisions_in_spritelist(spritelist):
     for i in range(len(spritelist)):
