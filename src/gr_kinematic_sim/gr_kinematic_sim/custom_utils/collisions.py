@@ -72,8 +72,17 @@ def check_kinematic_collision_between_spritelis_and_rect(spritelist, sprite):
 def check_mask_collision_between_spritelis_and_rect(spritelist, sprite):
     for i in range(len(spritelist)):
         if spritelist[i].name != sprite.name:
-            if sprite.get_mask().overlap(spritelist[i].get_mask(), (spritelist[i].rect.x - sprite.rect.x, spritelist[i].rect.y  - sprite.rect.y)):
-                return (True, spritelist[i].rect)
+            rect1 = sprite.rect
+            rect2 = spritelist[i].rect
+            
+            dx = rect2.centerx - rect1.centerx
+            dy = rect2.centery - rect1.centery
+            
+            dr = (dx ** 2 + dy ** 2) ** 0.5
+            
+            if dr < m.sqrt(rect1.height ** 2 + rect1.width ** 2):
+                if sprite.get_mask().overlap(spritelist[i].get_mask(), (spritelist[i].rect.x - sprite.rect.x, spritelist[i].rect.y  - sprite.rect.y)):
+                    return (True, spritelist[i].rect)
     return (False, None)
 
 def check_collisions_in_spritelist(spritelist):
@@ -130,18 +139,13 @@ def check_collisions_between_tilemap_and_lines(tilemap, lines, line_length):
         y2 = lines[j][1][1]
         
         for i in range(len(local_colliders)):
-            if local_colliders[i].clipline((x1, y1), (x2, y2)):
-                for k in range(50):
-                    dr = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5 * (k / 50)
-                    angle = m.atan2((y2 - y1), (x2 - x1))
-                    local_x2 = x1 + m.cos(angle) * dr
-                    local_y2 = y1 + m.sin(angle) * dr
-                    if local_colliders[i].clipline((x1, y1), (local_x2, local_y2)):
-                        if j not in collisions:
-                            collisions[j] = []
-                        
-                        collisions[j].append((local_x2, local_y2))
-                        break
+            clipped_line = local_colliders[i].clipline((x1, y1), (x2, y2))
+            if clipped_line:
+                if j not in collisions:
+                    collisions[j] = []
+                collisions[j].append(clipped_line[0])
+                collisions[j].append(clipped_line[1])
+
         
         if j in collisions:
             smallest_idx = 0
@@ -178,21 +182,47 @@ def check_collisions_between_spritelist_and_lines(spritelist, lines, name):
                 
                 dr_local = ((x1 - spritelist[i].rect.centerx) ** 2 + (y1 - spritelist[i].rect.centery) ** 2) ** 0.5
                 
-                if dr_local > line_length:
-                    continue
-                
-                if spritelist[i].rect.clipline((x1, y1), (x2, y2)):
-                    for k in range(50):
-                        dr = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5 * (k / 50)
-                        angle = m.atan2((y2 - y1), (x2 - x1))
-                        local_x2 = x1 + m.cos(angle) * dr
-                        local_y2 = y1 + m.sin(angle) * dr
-                        if spritelist[i].rect.clipline((x1, y1), (local_x2, local_y2)):
-                            if j not in collisions:
-                                collisions[j] = []
-                            
-                            collisions[j].append((local_x2, local_y2))
-                            break
+                if dr_local < line_length:
+                    
+                    clipped_line = spritelist[i].rect.clipline((x1, y1), (x2, y2))
+                    
+                    if clipped_line:
+                        if j not in collisions:
+                            collisions[j] = []
+                        collisions[j].append(clipped_line[0])
+                        break
+                    
+                    # if spritelist[i].rect.clipline((x1, y1), (x2, y2)):
+                    #     for k in range(50):
+                    #         dr = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5 * (k / 50)
+                    #         angle = m.atan2((y2 - y1), (x2 - x1))
+                    #         local_x2 = x1 + m.cos(angle) * dr
+                    #         local_y2 = y1 + m.sin(angle) * dr
+                    #         if spritelist[i].rect.clipline((x1, y1), (local_x2, local_y2)):
+                    #             if j not in collisions:
+                    #                 collisions[j] = []
+                                
+                    #             collisions[j].append((local_x2, local_y2))
+                    #             break
+                        
+                        # dr_local = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+                        # local_x2 = x2
+                        # local_y2 = y2
+                        # for k in range(20):
+                        #     if spritelist[i].rect.clipline((x1, y1), (local_x2, local_y2)):
+                        #         dr_local = dr_local * 0.83
+                        #         angle = m.atan2((y2 - y1), (x2 - x1))
+                        #         local_x2 = x1 + m.cos(angle) * dr_local
+                        #         local_y2 = y1 + m.sin(angle) * dr_local
+                        #     else:
+                        #         dr_local = dr_local * (1.2)
+                        #         angle = m.atan2((y2 - y1), (x2 - x1))
+                        #         local_x2 = x1 + m.cos(angle) * dr_local
+                        #         local_y2 = y1 + m.sin(angle) * dr_local
+                        # if j not in collisions:
+                        #     collisions[j] = []
+                        # collisions[j].append((local_x2, local_y2))
+                    
         
         if j in collisions:
             smallest_idx = 0

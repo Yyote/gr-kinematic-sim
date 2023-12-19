@@ -78,6 +78,8 @@ class Sprite(pygame.sprite.Sprite):
     
     def draw_mask(self):
         rect_to_draw = copy(self.rect)
+        print(self.curr_offset_x)
+        print(self.curr_offset_y)
         rect_to_draw.x += self.curr_offset_x
         rect_to_draw.y += self.curr_offset_y
         mask = pygame.mask.from_surface(self.image)
