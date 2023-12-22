@@ -75,6 +75,7 @@ class Lidar(Sprite):
                 if not m.isinf(x2):
                     dr = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5 
                     msg.ranges.append(dr / WORLD_SCALE)
+                    # pg.draw.circle(self.screen, (255, 0, 0), map_collisions[-i], 3, 1)
                 if m.isinf(x2):
                     msg.ranges.append(float('inf'))
                     x2 = m.cos(-i * msg.angle_increment - (self._current_rotation * m.pi / 180) + m.pi / 2) * msg.range_max * WORLD_SCALE + self.rect.centerx
@@ -95,6 +96,6 @@ class Lidar(Sprite):
 
 class LidarB1(Lidar):
     def __init__(self, robot_name, screen, node):
-        super().__init__(200, 200, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/LidarBig.png'), screen, 0, 0, 60, 180, robot_name, node)
+        super().__init__(200, 200, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/LidarBig.png'), screen, 0, 0, 40, 180, robot_name, node)
 
 
