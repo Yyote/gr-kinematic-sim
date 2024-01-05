@@ -9,7 +9,7 @@ sudo apt update
 ```
 
 ```shell
-sudo apt install ros-humble-tf-transformations python3-pip
+sudo apt install ros-$ROS_DISTRO-tf-transformations python3-pip
 pip3 install -r requirements.txt
 ```
 
