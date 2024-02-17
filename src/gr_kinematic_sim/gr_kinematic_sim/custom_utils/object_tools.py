@@ -21,7 +21,7 @@ from nav_msgs.srv import GetMap
 
 from gr_kinematic_sim.custom_utils.mathtools import normalise_in_range, sgn_wo_zero, rotation_matrix, EulerAngles, limit, make_non_zero
 from gr_kinematic_sim.custom_utils.collisions import check_kinematic_collision_between_tilemap_and_rect, check_kinematic_collision_between_spritelis_and_rect, check_mask_collision_between_spritelis_and_rect, check_mask_collision_between_tilemap_and_sprite
-from gr_kinematic_sim.custom_utils.gametools import tick_rate
+from gr_kinematic_sim.custom_utils.gametools import tick_rate, pygame_surface_to_opencv_image
 
 
 DEFAULT_IMAGE_SIZE = (50, 50)
@@ -61,16 +61,33 @@ class Sprite(pygame.sprite.Sprite):
     def move(self, x, y, degrees=0):
         self.rect.x += x
         self.rect.y += y
+        # if self.rect.x is None or self.rect.y is None:
+        #     print(f"ERROR: self.rect.x = {self.rect.x}, self.rect.y = {self.rect.y}")
         self.rotate(degrees)
     
     def draw(self):
+        
+        # print(f"self.curr_offset_x = {self.curr_offset_x},\nself.curr_offset_y = {self.curr_offset_y}")
+        # print(f"self.rect.x = {self.rect.x},\nself.rect.y = {self.rect.y}")
+        
         rect_to_draw = copy(self.rect)
         rect_to_draw.x += self.curr_offset_x
         rect_to_draw.y += self.curr_offset_y
-        try:
-            self.screen.blit(pygame.transform.rotozoom(self._original_image, self._current_rotation, 1), rect_to_draw)
-        except Exception as e:
-            print(e)
+        
+        # print(f"self.curr_offset_x = {self.curr_offset_x},\nself.curr_offset_y = {self.curr_offset_y}")
+        # print(f"rect_to_draw.x = {rect_to_draw.x},\nrect_to_draw.y = {rect_to_draw.y}")
+        
+        rotated_image = pygame.transform.rotozoom(self._original_image, self._current_rotation, 1)
+        
+        rotated_sprite_image = pygame_surface_to_opencv_image(rotated_image)
+        # rotated_sprite_image = np.ndarray()
+        
+        
+        
+        # rotated_sprite_image.
+        # cv2.imwrite(f"~/rotated_sprite_image", rotated_sprite_image)
+        
+        self.screen.blit(rotated_image, rect_to_draw)
     
     def update_offset(self, x, y):
         self.curr_offset_x = x
@@ -110,10 +127,11 @@ class PhysicalObject(Sprite):
         self.robot_factory = robot_factory
     
     def kinematic_rect_collision_check(self, sprite):
-        tilemap_collided, tile_collider = check_mask_collision_between_tilemap_and_sprite(self.tilemap, sprite)
         # spritelist_collided, sprite_collider = check_kinematic_collision_between_spritelis_and_rect(self.robot_factory.spritelist, sprite)
-        
+        # tilemap_collided, tile_collider = check_kinematic_collision_between_tilemap_and_rect(self.tilemap, sprite.rect)
+        tilemap_collided, tile_collider = check_mask_collision_between_tilemap_and_sprite(self.tilemap, sprite)
         spritelist_collided, sprite_collider = check_mask_collision_between_spritelis_and_rect(self.robot_factory.spritelist, sprite)
+        
         
         if tilemap_collided:
             return (True, tile_collider)
@@ -174,8 +192,17 @@ class PhysicalObject(Sprite):
         self.ang_accel *= self.friction_multiplier
 
     def _move(self):
+        print(f"ROBOT NAME = {self.name}")
+        if math.isnan(self.lin_vel_x) or math.isnan(self.lin_vel_y):
+            self.lin_vel_x = 0
+            self.lin_vel_y = 0
+            self.ang_vel = 0
         if self.dynamic_model:
             self._friction()
+        print(f"self.rect = {self.rect}")
+        print(f"self.lin_vel_x = {self.lin_vel_x}")
+        print(f"self.lin_vel_y = {self.lin_vel_y}")
+        print(f"type(self.lin_vel_y) = {type(self.lin_vel_y)}")
         copied_rect = copy(self.rect)
         copied_rect.x += self.lin_vel_x
         copied_rect.y += self.lin_vel_y
@@ -198,9 +225,10 @@ class PhysicalObject(Sprite):
         self.rect.y += self.lin_vel_y
         self.rotate(self.ang_vel)
 
+
     def draw(self, offset_x, offset_y):
         self.update_offset(offset_x, offset_y)
-        self._move()
+        # self._move()
         super().draw()
 
 

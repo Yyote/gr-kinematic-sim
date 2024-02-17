@@ -11,7 +11,7 @@ from gr_kinematic_sim.custom_utils.collisions import check_dynamic_collisions_be
 from gr_kinematic_sim.custom_utils.object_tools import Sprite, FoggedMap, PhysicalObject
 from gr_kinematic_sim.custom_utils.robots import Robot, AckermanRobot, RobotFactory
 
-from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity, handle_keypresses_through_velocity_omni
+from gr_kinematic_sim.custom_utils.gametools import handle_key_events, handle_offset_change, handle_keypresses_through_force, move_every_sprite_in_list, move_every_sprite_in_list, draw_every_sprite_in_list, scroll_screen_with_mouse, handle_keypresses_through_velocity, handle_keypresses_through_velocity_omni
 from gr_kinematic_sim.custom_utils.gametools import tick_rate
 
 import faulthandler
@@ -24,6 +24,12 @@ class SimNode(Node):
     def __init__(self):
         super().__init__('gr_kinematic_sim')
         self.cmd_vel_pub = self.create_publisher(TwistStamped, "/robot1/cmd_vel", 10)
+
+
+
+
+
+
 
 
 
@@ -48,7 +54,7 @@ def main():
     pg.display.set_caption('My game')
 
     clock = pg.time.Clock()
-    gmap = FoggedMap(f'{pkg_dir}gr_kinematic_sim/maps/map_test.tmx', node)
+    gmap = FoggedMap(f'{pkg_dir}gr_kinematic_sim/maps/Empty_49x49.tmx', node)
     map_img = gmap.make_map()
     map_rect = map_img.get_rect()
 
@@ -59,17 +65,19 @@ def main():
 
     factory = RobotFactory(node, gmap, screen)
 
-    robot1 = factory.create_ackerman_with_lidar(200, 200)
-    robot3 = factory.create_tracked_with_lidar(150, 150)
-    robot4 = factory.create_omni_with_lidar(150, 200)
-    robot2 = factory.create_tracked_with_lidar(100, 150)
+    robot1 = factory.create_tracked_with_lidar(200, 200)
+    # robot3 = factory.create_tracked_with_lidar(150, 150)
+    # robot4 = factory.create_omni_with_lidar(150, 200)
+    # robot2 = factory.create_ackerman_with_lidar(100, 150)
+    # robot5 = factory.create_tracked_with_lidar(200, 150)
 
 
 
     all_sprites.append(robot1)
-    all_sprites.append(robot3)
-    all_sprites.append(robot4)
-    all_sprites.append(robot2)
+    # all_sprites.append(robot3)
+    # all_sprites.append(robot4)
+    # all_sprites.append(robot2)
+    # all_sprites.append(robot5)
 
     running = True
     while running:
@@ -90,6 +98,7 @@ def main():
         handle_keypresses_through_velocity(robot1, node)
         
         handle_key_events()
+        move_every_sprite_in_list(all_sprites)
         draw_every_sprite_in_list(all_sprites, global_offset_x, global_offset_y)
         # check_dynamic_collisions_between_tilemap_and_spritelist(gmap, spritelist=all_sprites)
         
@@ -107,7 +116,3 @@ def main():
         rclpy.spin_once(node, timeout_sec=1 / (2 * tick_rate))
         counter += 1
     
-
-if __name__ == '__main__':
-    main()
-    rclpy.shutdown()

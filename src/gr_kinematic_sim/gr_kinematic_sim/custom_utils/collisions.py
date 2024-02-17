@@ -58,7 +58,7 @@ def check_mask_collision_between_tilemap_and_sprite(tilemap, sprite):
             dy = tilemap.map_dict[x][y].rect.y  - sprite.rect.y
             dr = m.sqrt(dx ** 2 + dy ** 2)
             if dr < m.sqrt(sprite.rect.height ** 2 + sprite.rect.width ** 2):
-                if sprite.get_mask().overlap(tilemap.map_dict[x][y].get_mask(), (dx, dy)) and tilemap.map_dict[x][y].real_gid == 1:
+                if sprite.get_mask().overlap_area(tilemap.map_dict[x][y].get_mask(), (dx, dy)) and tilemap.map_dict[x][y].real_gid == 1:
                     return (True, tilemap.map_dict[x][y].rect)
     return (False, None)
 
@@ -81,9 +81,12 @@ def check_mask_collision_between_spritelis_and_rect(spritelist, sprite):
             dr = (dx ** 2 + dy ** 2) ** 0.5
             
             if dr < m.sqrt(rect1.height ** 2 + rect1.width ** 2):
-                if sprite.get_mask().overlap(spritelist[i].get_mask(), (spritelist[i].rect.x - sprite.rect.x, spritelist[i].rect.y  - sprite.rect.y)):
+                # if sprite.get_mask().overlap_area(spritelist[i].get_mask(), (spritelist[i].rect.x - sprite.rect.x, spritelist[i].rect.y  - sprite.rect.y)):
+                if pg.sprite.collide_mask(sprite, spritelist[i]):
                     return (True, spritelist[i].rect)
     return (False, None)
+
+
 
 def check_collisions_in_spritelist(spritelist):
     for i in range(len(spritelist)):
