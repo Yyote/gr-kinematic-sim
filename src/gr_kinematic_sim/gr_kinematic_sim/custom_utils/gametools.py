@@ -1,5 +1,7 @@
 import pygame as pg
 import math
+import numpy as np
+import cv2
 import rclpy
 from geometry_msgs.msg import TwistStamped
 
@@ -61,9 +63,9 @@ def handle_keypresses_through_velocity(sprite, node):
     if keys[pg.K_UP]:
         vel += 2
     if keys[pg.K_LEFT]:
-        ang_vel -= 159
-    if keys[pg.K_RIGHT]:
         ang_vel += 159
+    if keys[pg.K_RIGHT]:
+        ang_vel -= 159
     if keys[pg.K_DOWN]:
         vel -= 2
 
@@ -130,6 +132,11 @@ def handle_offset_change(offset_x, offset_y):
     return offset_x, offset_y
 
 
+def move_every_sprite_in_list(list_):
+    for i in range(len(list_)):
+        list_[i]._move()
+
+
 def draw_every_sprite_in_list(list_, offset_x, offset_y):
     for i in range(len(list_)):
         list_[i].update_offset(offset_x, offset_y)
@@ -149,3 +156,11 @@ def scroll_screen_with_mouse(screen_width, screen_height, offset_x, offset_y):
         offset_y -= 5
         
     return offset_x, offset_y
+
+
+def pygame_surface_to_opencv_image(surface):
+    h = surface.get_height()
+    w = surface.get_width()
+    img = np.rollaxis(np.reshape(np.array(pg.surfarray.array3d(surface)), (w, h, 3)), 1)
+    img[:, :, [0, 2]] = img[:, :, [2, 0]]
+    return img

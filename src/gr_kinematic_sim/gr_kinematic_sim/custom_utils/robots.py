@@ -190,6 +190,10 @@ class Robot(PhysicalObject):
             raise TypeError('`sensors` must be an array!')
             quit()
         self.sensors = sensors
+        
+    
+    # def draw_outline_points(self):
+    #     outline = self.get_mask().
 
 
 class AckermanRobot(Robot):
@@ -342,7 +346,7 @@ class RobotFactory:
         
     def create_ackerman_with_lidar(self, pos_x, pos_y):
         sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
-        robot = AckermanRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/wheeled2.png'), self.screen, 0, 0, 1, 0.9, (25, 25))
+        robot = AckermanRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/wheeled2.png').convert_alpha(), self.screen, 0, 0, 1, 0.9, (25, 25))
         robot.set_sensors(sensors)
         self.spritelist.append(robot)
         if len(self.spritelist) > 1:
@@ -353,7 +357,7 @@ class RobotFactory:
         
     def create_omni_with_lidar(self, pos_x, pos_y):
         sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
-        robot = OmniRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/omniwheeled.png'), self.screen, 0, 0, 1, 0.9, (25, 25))
+        robot = OmniRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/omniwheeled.png').convert_alpha(), self.screen, 0, 0, 1, 0.9, (25, 25))
         robot.set_sensors(sensors)
         self.spritelist.append(robot)
         if len(self.spritelist) > 1:
@@ -364,7 +368,7 @@ class RobotFactory:
     
     def create_tracked_with_lidar(self, pos_x, pos_y):
         sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
-        robot = TrackedRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/tracked.png'), self.screen, 0, 0, 1, 0.9, (25, 25))
+        robot = TrackedRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/tracked.png').convert_alpha(), self.screen, 0, 0, 1, 0.9, (25, 25))
         robot.set_sensors(sensors)
         self.spritelist.append(robot)
         if len(self.spritelist) > 1:
