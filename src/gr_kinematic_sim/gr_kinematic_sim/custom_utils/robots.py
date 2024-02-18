@@ -203,35 +203,15 @@ class AckermanRobot(Robot):
         self.linear_max = 1.0
         self.min_rotation_radius = self.linear_max ** 2 / (self.mass * 9.81 * self.friction_multiplier)
     
-    # def cmd_vel_cb(self, msg):
-    #     # msg = TwistStamped()
-    #     # msg.twist = Twist()
-    #     if abs(msg.twist.linear.x) > self.linear_max:
-    #         msg.twist.linear.x = self.linear_max * sgn_wo_zero(msg.twist.linear.x)
-        
-    #     acv = msg.twist.linear.x ** 2 / self.min_rotation_radius
-    #     acw = msg.twist.angular.z ** 2 * self.min_rotation_radius
-        
-    #     if acw > acv:
-    #         msg.twist.angular.z = abs(acv / self.min_rotation_radius) ** 0.5 * sgn_wo_zero(msg.twist.angular.z)
-        
-    #     self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, (msg.twist.angular.z / tick_rate) * 180 / math.pi)
-    
     def cmd_vel_cb(self, msg):
-        # msg = TwistStamped()
-        # msg.twist = Twist()
         if abs(msg.twist.linear.x) > self.linear_max:
             msg.twist.linear.x = self.linear_max * sgn_wo_zero(msg.twist.linear.x)
         
-        phi = -msg.twist.angular.z
+        # phi = -msg.twist.angular.z
+        phi = msg.twist.angular.z
         if abs(phi) > math.pi / 6:
             phi = math.pi / 6 * sgn_wo_zero(phi)
         angular_vel = msg.twist.linear.x / ((self._original_image.get_rect().height) / WORLD_SCALE) * math.tan(phi) 
-        # acv = msg.twist.linear.x ** 2 / self.min_rotation_radius
-        # acw = msg.twist.angular.z ** 2 * self.min_rotation_radius
-        
-        # if acw > acv:
-        #     msg.twist.angular.z = abs(acv / self.min_rotation_radius) ** 0.5 * sgn_wo_zero(msg.twist.angular.z)
         
         self.set_local_velocity(msg.twist.linear.x * WORLD_SCALE / tick_rate, (angular_vel / tick_rate) * 180 / math.pi)
     
