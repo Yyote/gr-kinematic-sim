@@ -192,17 +192,12 @@ class PhysicalObject(Sprite):
         self.ang_accel *= self.friction_multiplier
 
     def _move(self):
-        print(f"ROBOT NAME = {self.name}")
         if math.isnan(self.lin_vel_x) or math.isnan(self.lin_vel_y):
             self.lin_vel_x = 0
             self.lin_vel_y = 0
             self.ang_vel = 0
         if self.dynamic_model:
             self._friction()
-        print(f"self.rect = {self.rect}")
-        print(f"self.lin_vel_x = {self.lin_vel_x}")
-        print(f"self.lin_vel_y = {self.lin_vel_y}")
-        print(f"type(self.lin_vel_y) = {type(self.lin_vel_y)}")
         copied_rect = copy(self.rect)
         copied_rect.x += self.lin_vel_x
         copied_rect.y += self.lin_vel_y
