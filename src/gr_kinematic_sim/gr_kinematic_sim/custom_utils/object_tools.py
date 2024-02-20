@@ -383,17 +383,17 @@ class FoggedMap(TiledMap):
         #prob_vec = []
         occupancyG.header.frame_id = "map"
         occupancyG.header.stamp = self.node.get_clock().now().to_msg()
-        occupancyG.info.height = self.gameMap.height
-        occupancyG.info.width = self.gameMap.width
-        occupancyG.info.origin.position.x = 0.0
-        occupancyG.info.origin.position.y = 0.0
-        occupancyG.info.origin.position.z = 0.0
-        occupancyG.info.origin.orientation = angle.setRPY_of_quaternion(0, math.pi, math.pi/2)
         occupancyG.info.resolution = 0.5
+        occupancyG.info.height = self.gameMap.width
+        occupancyG.info.width = self.gameMap.height
+        occupancyG.info.origin.position.x = - self.gameMap.height * occupancyG.info.resolution
+        occupancyG.info.origin.position.y = - self.gameMap.width * occupancyG.info.resolution
+        occupancyG.info.origin.position.z = 0.0
+        occupancyG.info.origin.orientation = angle.setRPY_of_quaternion(0, 0, 0)
         k = 0
 
-        for j in range(self.gameMap.height):
-            for i in range(self.gameMap.width):
+        for i in range(self.gameMap.width).__reversed__():
+            for j in range(self.gameMap.height).__reversed__():
                 if img[j][i][0] == 0: 
                     prob_vec[k] = 100
                 elif img[j][i][0] == 95: 
