@@ -17,7 +17,7 @@ def generate_launch_description():
     ]
     
     
-    map_name = 'map_test.tmx'
+    map_name = 'Empty_49x49.tmx'
     
     ld.add_action(actions.Node(
         package="gr_kinematic_sim",
