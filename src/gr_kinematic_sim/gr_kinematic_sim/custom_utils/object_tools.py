@@ -209,13 +209,15 @@ class PhysicalObject(Sprite):
         if not self.dynamic_model and kinematic_collision:
             dx = -self.rect.centerx + collide_rect.centerx
             dy = -self.rect.centery + collide_rect.centery
-            dx = -self.rect.centerx + collide_rect.centerx
-            dy = -self.rect.centery + collide_rect.centery
-            # self.lin_vel_x = - limit(10 / (make_non_zero(dx)), 3)
-            # self.lin_vel_y = - limit(10 / (make_non_zero(dy)), 3)
-            self.lin_vel_x = 0
-            self.lin_vel_y = 0
-            self.ang_vel = 0
+
+            alpha = math.atan2(dy, dx)
+            
+            self.lin_vel_x = - 1.5 * math.cos(alpha)
+            self.lin_vel_y = - 1.5 * math.sin(alpha)
+
+            # self.lin_vel_x = 0
+            # self.lin_vel_y = 0
+            # self.ang_vel = 0
         self.rect.x += self.lin_vel_x
         self.rect.y += self.lin_vel_y
         self.rotate(self.ang_vel)
