@@ -218,8 +218,8 @@ class PhysicalObject(Sprite):
             # self.lin_vel_x = 0
             # self.lin_vel_y = 0
             # self.ang_vel = 0
-        self.rect.x += self.lin_vel_x
-        self.rect.y += self.lin_vel_y
+        self.rect.x += round(self.lin_vel_x)
+        self.rect.y += round(self.lin_vel_y)
         self.rotate(self.ang_vel)
 
 
