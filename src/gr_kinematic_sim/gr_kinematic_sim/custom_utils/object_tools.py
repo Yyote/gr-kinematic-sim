@@ -125,6 +125,7 @@ class PhysicalObject(Sprite):
         self.tilemap = tilemap
         self.name = name
         self.robot_factory = robot_factory
+        self.covered_path = 0
     
     def kinematic_rect_collision_check(self, sprite):
         # spritelist_collided, sprite_collider = check_kinematic_collision_between_spritelis_and_rect(self.robot_factory.spritelist, sprite)
@@ -220,8 +221,14 @@ class PhysicalObject(Sprite):
             # self.ang_vel = 0
         self.rect.x += round(self.lin_vel_x)
         self.rect.y += round(self.lin_vel_y)
+        
+        path = (round(self.lin_vel_x) ** 2 + round(self.lin_vel_y) ** 2) ** 0.5
+        self.covered_path += path / WORLD_SCALE
+        
         self.rotate(self.ang_vel)
 
+    def get_covered_path(self):
+        return self.covered_path
 
     def draw(self, offset_x, offset_y):
         self.update_offset(offset_x, offset_y)
@@ -412,3 +419,39 @@ class FoggedMap(TiledMap):
         occupancyG.data = prob_vec
         self.publisher.publish(occupancyG)
         return occupancyG
+    
+    def get_statistics(self):
+        """
+        Calculates the number of fogged and unfogged unoccupied tiles and their percentage in the map.
+
+        This function iterates through the `map_dict` attribute, which is assumed to be a 2D dictionary representing the map. Each key-value pair in the inner dictionary represents a tile at a specific location.
+
+        **Args:**
+            self (object): An instance of the class containing the `map_dict` attribute.
+
+        **Returns:**
+            tuple: A tuple containing three elements:
+        
+            - fogged_unoccupied_tile_count (int): The number of tiles that are both fogged (gid=6) and unoccupied (real_gid=2).
+            - unfogged_unoccupied_tile_count (int): The number of tiles that are unfogged (gid=2) and unoccupied (real_gid=2).
+            - percentage_unoccupied (float): The percentage of unoccupied tiles in the map (rounded to two decimal places).
+
+        **Raises:**
+            - AttributeError: If the `map_dict` attribute is not found on the object.
+        """
+        fogged_unoccupied_tile_count = 0
+        unfogged_unoccupied_tile_count = 0
+        total_unoccupied = 0
+        
+        
+        for x in range(len(self.map_dict)):
+            for y in range(len(self.map_dict[x])):
+                
+                if self.map_dict[x][y].gid == 6 and self.map_dict[x][y].real_gid == 2:
+                    fogged_unoccupied_tile_count += 1
+                    total_unoccupied += 1
+                elif self.map_dict[x][y].gid == 2 and self.map_dict[x][y].real_gid == 2:
+                    unfogged_unoccupied_tile_count += 1
+                    total_unoccupied += 1
+        
+        return fogged_unoccupied_tile_count, unfogged_unoccupied_tile_count, unfogged_unoccupied_tile_count / total_unoccupied * 100 
