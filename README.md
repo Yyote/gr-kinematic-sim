@@ -2,7 +2,7 @@
 
 ## Установка
 
-Зайдите в `gr-kinematic-sim/src/gr_kinematic_sim` и выполните следующие команды
+Зайдите в `gr-kinematic-sim/` и выполните следующие команды
 
 ```shell
 sudo apt update
