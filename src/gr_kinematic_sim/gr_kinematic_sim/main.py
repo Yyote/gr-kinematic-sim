@@ -1,6 +1,10 @@
 import pygame as pg
 import rclpy
 import os
+from getpass import getuser
+from datetime import datetime
+import time
+import json
 
 from rclpy.node import Node
 from geometry_msgs.msg import TwistStamped, Twist
@@ -20,6 +24,11 @@ faulthandler.enable()
 
 pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr_kinematic_sim/"
 
+logs_dir = f"/home/{getuser()}/simulation_logs/"
+current_log_name = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
+log_rate = 1
+
+
 
 class SimNode(Node):
     def __init__(self):
@@ -28,6 +37,7 @@ class SimNode(Node):
         
         self.robot_types = try_get(lambda: self.get_parameter("robot_types"), None) # Этот параметр отвечает за спавн роботов в сценариях. Если он None, используется спавн через функцию мэйн
         self.robot_coords = try_get(lambda: self.get_parameter("robot_coords"), None) # Этот параметр отвечает за спавн роботов в сценариях. Если он None, используется спавн через функцию мэйн
+        self.log_prefix = try_get(lambda: self.get_parameter("log_prefix"), "")
         self.robots = None
         
         if self.robot_types is not None and self.robot_coords is not None and len(self.robot_coords) == len(self.robot_types) * 2:
@@ -91,9 +101,17 @@ class SimNode(Node):
 def main():    
     rclpy.init()
     node = SimNode()
+
+    with open(f"{logs_dir}{node.log_prefix}{current_log_name}", "w+") as log_fh:
+        pre_json = {
+            'data' : []
+        }
+        # prejson_to_file = json.dumps(pre_json)
+        # json.dump(prejson_to_file, log_fh)
+        json.dump(pre_json, log_fh)
     
-    counter = 0
-    ck = tick_rate / 10
+
+    tick_counter = 0
     
     pg.init()
     # screen = pg.display.set_mode((1, 1))
@@ -148,8 +166,40 @@ def main():
         global_offset_x, global_offset_y = scroll_screen_with_mouse(width, height, global_offset_x, global_offset_y)
         
         screen.fill((0,0,0))
-        gmap.update_counter(counter)
+        gmap.update_counter(tick_counter)
         gmap.render(screen=screen, offset_x=global_offset_x, offset_y=global_offset_y)
+        
+        fogged_unoccupied_tile_count, unfogged_unoccupied_tile_count, percentage = gmap.get_statistics()
+        simulation_seconds = tick_counter / tick_rate
+        # print(f"fogged_unoccupied_tile_count = {fogged_unoccupied_tile_count}\nunfogged_unoccupied_tile_count = {unfogged_unoccupied_tile_count}\npercentage = {percentage}simulation_seconds = {simulation_seconds}")
+        
+        average_covered_path = 0
+        
+        for robot in all_sprites:
+            average_covered_path += robot.get_covered_path()
+        average_covered_path /= len(all_sprites)
+        
+        
+        if tick_counter % (tick_rate / log_rate) == 0:
+            log = {
+                "fogged_unoccupied_tile_count" : fogged_unoccupied_tile_count,
+                "unfogged_unoccupied_tile_count" : unfogged_unoccupied_tile_count,
+                "percentage" : percentage,
+                "simulation_seconds" : simulation_seconds,
+                "average_covered_path" : average_covered_path
+                }
+            
+            loaded_dict = None
+            with open(f"{logs_dir}{node.log_prefix}{current_log_name}", "r+") as log_fh:
+                loaded_dict = json.load(log_fh)
+                # loaded_dict = json.loads(loaded_log)
+                loaded_dict['data'].append(log)
+
+            with open(f"{logs_dir}{node.log_prefix}{current_log_name}", "w") as log_fh:
+                log_fh.write("")
+                # loaded_dict_serialized = json.dumps(loaded_dict)
+                json.dump(loaded_dict, log_fh)
+
         
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -177,5 +227,4 @@ def main():
         # print(f"FPS = {clock.get_fps()}")
         
         rclpy.spin_once(node, timeout_sec=1 / (2 * tick_rate))
-        counter += 1
-    
+        tick_counter += 1
