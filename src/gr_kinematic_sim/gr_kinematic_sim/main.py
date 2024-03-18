@@ -102,6 +102,10 @@ def main():
     rclpy.init()
     node = SimNode()
 
+    if not os.path.exists(logs_dir):
+        os.mkdir(logs_dir)
+        node.get_logger().warn(f"gr_kinematic_sim: Attention! No log directory found. Creating one in {logs_dir}")
+
     with open(f"{logs_dir}{node.log_prefix}{current_log_name}", "w+") as log_fh:
         pre_json = {
             'data' : []
