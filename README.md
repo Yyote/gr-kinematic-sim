@@ -12,6 +12,10 @@ sudo apt update
 sudo apt install ros-$ROS_DISTRO-tf-transformations python3-pip
 pip3 install -r requirements.txt
 ```
+Если установка зависимостей прошла успешно, соберите воркспэйс:
+```shell
+colcon build
+```
 
 ## Запуск симулятора 
 
