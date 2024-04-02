@@ -38,6 +38,8 @@ class SimNode(Node):
         self.robot_types = try_get(lambda: self.get_parameter("robot_types"), None) # Этот параметр отвечает за спавн роботов в сценариях. Если он None, используется спавн через функцию мэйн
         self.robot_coords = try_get(lambda: self.get_parameter("robot_coords"), None) # Этот параметр отвечает за спавн роботов в сценариях. Если он None, используется спавн через функцию мэйн
         self.log_prefix = try_get(lambda: self.get_parameter("log_prefix"), "")
+        self.enable_lidar_pointcloud = try_get(lambda: self.get_parameter("enable_lidar_pointcloud"), True)
+        # self.enable_lidar_pointcloud = try_get(lambda: self.get_parameter("enable_lidar_pointcloud"), False)
         self.robots = None
         
         if self.robot_types is not None and self.robot_coords is not None and len(self.robot_coords) == len(self.robot_types) * 2:
@@ -147,7 +149,7 @@ def main():
 
 
     all_sprites = []
-    factory = RobotFactory(node, gmap, screen)
+    factory = RobotFactory(node, gmap, screen, enable_lidar_pointcloud=node.enable_lidar_pointcloud)
 
     node.parse_robots(robot_factory=factory, all_sprites_list=all_sprites)
 

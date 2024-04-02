@@ -316,43 +316,44 @@ class TrackedRobot(Robot):
 
 
 class RobotFactory:
-    def __init__(self, node, tilemap, screen, default_robot_name="/robot"):
+    def __init__(self, node, tilemap, screen, default_robot_name="/robot", enable_lidar_pointcloud=False):
         self.node = node
         self.tilemap = tilemap
         self.default_robot_name = default_robot_name
         self.screen = screen
-        self.robot_counter = 1
+        self.robot_counter = 0
         self.spritelist = []
+        self.enable_lidar_pointcloud = enable_lidar_pointcloud
         
     def create_ackerman_with_lidar(self, pos_x, pos_y):
-        sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
+        sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node, enable_pointcloud=self.enable_lidar_pointcloud)]
         robot = AckermanRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/wheeled2.png').convert_alpha(), self.screen, 0, 0, 1, 0.9, (25, 25))
         robot.set_sensors(sensors)
         self.spritelist.append(robot)
         if len(self.spritelist) > 1:
             for i in range(len(self.spritelist)):
-                self.spritelist[self.robot_counter - 1].robot_factory.spritelist.append(robot)
+                self.spritelist[self.robot_counter].robot_factory.spritelist.append(robot)
         self.robot_counter += 1
         return robot
         
     def create_omni_with_lidar(self, pos_x, pos_y):
-        sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
+        sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node, enable_pointcloud=self.enable_lidar_pointcloud)]
         robot = OmniRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/omniwheeled.png').convert_alpha(), self.screen, 0, 0, 1, 0.9, (25, 25))
         robot.set_sensors(sensors)
         self.spritelist.append(robot)
         if len(self.spritelist) > 1:
             for i in range(len(self.spritelist)):
-                self.spritelist[self.robot_counter - 1].robot_factory.spritelist.append(robot)
+                self.spritelist[self.robot_counter].robot_factory.spritelist.append(robot)
         self.robot_counter += 1
         return robot
     
     def create_tracked_with_lidar(self, pos_x, pos_y):
-        sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node)]
+        sensors = [LidarB1(f"robot{self.robot_counter}", self.screen, self.node, enable_pointcloud=self.enable_lidar_pointcloud)]
         robot = TrackedRobot(self.node, f"robot{self.robot_counter}", self.tilemap, self,  pos_x, pos_y, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/robots/tracked.png').convert_alpha(), self.screen, 0, 0, 1, 0.9, (25, 25))
         robot.set_sensors(sensors)
         self.spritelist.append(robot)
         if len(self.spritelist) > 1:
             for i in range(len(self.spritelist)):
-                self.spritelist[self.robot_counter - 1].robot_factory.spritelist.append(robot)
+                self.spritelist[self.robot_counter].robot_factory.spritelist.append(robot)
         self.robot_counter += 1
         return robot

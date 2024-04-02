@@ -1,9 +1,11 @@
 import pygame as pg
 import pygame.draw as d
 import math as m
+import numpy as np
 import os
 import rclpy
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, PointCloud2, PointField
+from std_msgs.msg import Header
 from gr_kinematic_sim.custom_utils.object_tools import Sprite, SMALL_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, VERY_SMALL_IMAGE_SIZE, WORLD_SCALE
 from gr_kinematic_sim.custom_utils.collisions import find_lidar_collisions
 from ament_index_python.packages import get_package_share_directory
@@ -11,7 +13,7 @@ from ament_index_python.packages import get_package_share_directory
 pkg_dir = f"{get_package_share_directory('gr_kinematic_sim')}/../../../../src/gr_kinematic_sim/"
 
 class Lidar(Sprite):
-    def __init__(self, x, y, image, screen, offset_x, offset_y, num_rays, ray_length_px, robot_name, node):
+    def __init__(self, x, y, image, screen, offset_x, offset_y, num_rays, ray_length_px, robot_name, node, enable_pointcloud):
         super().__init__(x, y, image, screen, offset_x, offset_y, VERY_SMALL_IMAGE_SIZE)
         self.curr_offset_x = offset_x
         self.curr_offset_y = offset_y
@@ -19,7 +21,9 @@ class Lidar(Sprite):
         self.ray_length_px = ray_length_px
         self.node = node
         self.lidar_pub = node.create_publisher(LaserScan, f"{robot_name}/scan", 10)
+        self.pointcloud_pub = node.create_publisher(PointCloud2, f"{robot_name}/pointcloud", 10)
         self.robot_name = robot_name
+        self.enable_pointcloud = enable_pointcloud
         
         self.angle_min = - m.pi
         self.angle_max = m.pi
@@ -84,6 +88,44 @@ class Lidar(Sprite):
         
         tilemap.unfog_map(map_collisions, self.rect.center, msg.range_max * WORLD_SCALE)
 
+        if self.enable_pointcloud:
+            ros_dtype = PointField.FLOAT32
+            dtype = np.float32
+            itemsize = np.dtype(dtype).itemsize # A 32-bit float takes 4 bytes.
+
+            points = []
+
+            for i in range(len(msg.ranges)):
+                x = msg.ranges[i] * m.cos(i * msg.angle_increment + m.pi)
+                y = msg.ranges[i] * m.sin(i * msg.angle_increment + m.pi)
+                z = 0
+                points.append([x, y, z])
+            
+            points = np.array(points)
+            data = points.astype(dtype).tobytes()
+
+            fields = [PointField(
+                name=n, offset=i*itemsize, datatype=ros_dtype, count=1)
+                for i, n in enumerate('xyz')]
+
+            pc = PointCloud2()
+            pc.is_dense = False
+            pc.is_bigendian = False
+
+            header = Header()
+            header.stamp = self.node.get_clock().now().to_msg()
+            header.frame_id = f"{self.robot_name}/laser"
+            pc.header = header
+
+            pc.fields = fields
+            pc.height = 1
+            pc.width = points.shape[0]
+            pc.point_step = (itemsize * 3)
+            pc.row_step = (itemsize * 3 * points.shape[0])
+            pc.data = data
+
+            self.pointcloud_pub.publish(pc)
+
         self.lidar_pub.publish(msg)
         return collisions
     
@@ -95,7 +137,7 @@ class Lidar(Sprite):
 
 
 class LidarB1(Lidar):
-    def __init__(self, robot_name, screen, node):
-        super().__init__(200, 200, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/LidarBig.png'), screen, 0, 0, 40, 180, robot_name, node)
+    def __init__(self, robot_name, screen, node, enable_pointcloud=False):
+        super().__init__(200, 200, pg.image.load(f'{pkg_dir}gr_kinematic_sim/sprites/LidarBig.png'), screen, 0, 0, 40, 180, robot_name, node, enable_pointcloud=enable_pointcloud)
 
 
