@@ -1,6 +1,6 @@
 import math
 from geometry_msgs.msg import PoseStamped, Quaternion
-from tf_transformations import quaternion_from_euler, euler_from_quaternion
+from transforms3d.euler import euler2quat as quaternion_from_euler, quat2euler as euler_from_quaternion
 
 def rotation_matrix(x_in, y_in, angle_rad):
     """Матрица поворота

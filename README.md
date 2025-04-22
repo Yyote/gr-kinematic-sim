@@ -25,3 +25,15 @@ colcon build
 source install/setup.bash
 ros2 run gr_kinematic_sim sim
 ```
+
+## Создание сценариев
+
+Чтобы создать сценарий с заранее заданными моделями, позициями роботов и картой, используйте launch-файлы. Пример такого лаунч файла можете найти в `gr-kinematic-sim/src/gr_kinematic_sim/launch/test_scenario.launch.py`.
+
+Чтобы заупстить launch-файл сценария, выполните следующие команды:
+
+```
+source install/setup.bash
+ros2 launch gr_kinematic_sim test_scenario.launch.py
+```
+
