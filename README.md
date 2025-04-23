@@ -37,3 +37,9 @@ source install/setup.bash
 ros2 launch gr_kinematic_sim test_scenario.launch.py
 ```
 
+## Лицензия
+
+Лицензия
+
+Этот проект распространяется по лицензии Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0). © 2025 Yyote (yyootttaa@gmail.com)
+
