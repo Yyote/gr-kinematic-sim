@@ -4,8 +4,8 @@
   <name>gr_kinematic_sim</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="yyootttaa@gmail.com">leev</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="yyootttaa@gmail.com">Yyote</maintainer>
+  <license>Creative Commons Attribution-NonCommercial 4.0 International (https://creativecommons.org/licenses/by-nc/4.0/)</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
